@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Speed Touch 25 - Ultimate Edition</title>
+    <style>
+        :root {
+            --primary-color: #4285f4;
+            --success-color: #34a853;
+            --error-color: #ea4335;
+            --bg-color: #ffffff; /* サイトに馴染むよう白に設定 */
+            --panel-color: #f8f9fa;
+        }
+
+        /* 1. 横幅いっぱいに広げるための設定 */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden;
+            background-color: var(--bg-color);
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px; /* PCでの見栄えを考慮 */
+            padding: 10px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .info-panel { text-align: center; margin-bottom: 10px; width: 100%; }
+        .timer { font-size: 3rem; font-weight: bold; color: #333; font-variant-numeric: tabular-nums; line-height: 1; }
+        .next-number { font-size: 1.2rem; color: var(--primary-color); font-weight: bold; margin-top: 5px; }
+
+        .setup-area {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        /* 2. グリッドのレスポンシブ化 */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+        }
+
+        .cell {
+            background-color: var(--panel-color);
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(1.2rem, 5vw, 1.8rem);
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #ccc;
+            transition: transform 0.05s;
+        }
+
+        .cell:active { transform: translateY(2px); box-shadow: 0 1px 0 #ccc; }
+        .cell.correct { visibility: hidden; pointer-events: none; }
+        .cell.wrong { background-color: var(--error-color); color: white; animation: shake 0.2s; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+
+        .controls { width: 100%; margin: 20px 0; display: flex; flex-direction: column; gap: 8px; }
+        button {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+        }
+        .btn-reset { background-color: #666; font-size: 0.9rem; padding: 10px; }
+
+        .ranking {
+            width: 100%;
+            background: #fdfdfd;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+            margin-top: 10px;
+        }
+        .ranking h3 { margin: 0 0 10px 0; font-size: 1rem; color: #555; text-align: center; border-bottom: 2px solid var(--primary-color); padding-bottom: 5px; }
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 0.95rem;
+        }
+        .r-name { font-weight: bold; color: #333; }
+        .r-time { font-family: monospace; color: #666; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="info-panel">
+        <div class="timer" id="timer">0.000</div>
+        <div class="next-number">NEXT: <span id="target">1</span></div>
+    </div>
+
+    <div class="setup-area">
+        <input type="text" id="playerName" placeholder="名前を入力（例：おかだ）" maxlength="10">
+        <button onclick="initGame()">ゲーム開始 / リセット</button>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="controls">
+        <button class="btn-reset" onclick="clearRecords()">ランキング全消去</button>
+    </div>
+
+    <div class="ranking">
+        <h3>🏆 TOP 10 RANKING</h3>
+        <div id="rankingList"></div>
+    </div>
+</div>
+
+<script>
+    const STORAGE_KEY = 'speed_touch_vFinal';
+    let nextNum = 1;
+    let startTime, timerInterval, isRunning = false;
+    let audioCtx = null;
+
+    // 初期化処理
+    window.addEventListener('DOMContentLoaded', () => {
+        updateRankingDisplay();
+        createBoard(true); // プレビュー用の盤面
+    });
+
+    // 音声生成
+    function playSound(freq, type, duration, vol=0.1) {
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        } catch(e) { console.log("Audio Error"); }
+    }
+
+    function createBoard(isPreview = false) {
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '';
+        const nums = Array.from({length: 25}, (_, i) => i + 1);
+        if(!isPreview) {
+            for(let i=nums.length-1; i>0; i--){
+                const j = Math.floor(Math.random()*(i+1));
+                [nums[i], nums[j]] = [nums[j], nums[i]];
+            }
+        }
+        nums.forEach(num => {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.textContent = num;
+            cell.onclick = () => handleTouch(num, cell);
+            grid.appendChild(cell);
+        });
+    }
+
+    function initGame() {
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        clearInterval(timerInterval);
+        isRunning = false;
+        nextNum = 1;
+        document.getElementById('timer').textContent = "0.000";
+        document.getElementById('target').textContent = "1";
+        createBoard(false);
+    }
+
+    function handleTouch(num, element) {
+        if (num === nextNum) {
+            playSound(880, 'sine', 0.1);
+            if (nextNum === 1) {
+                isRunning = true;
+                startTime = Date.now();
+                timerInterval = setInterval(() => {
+                    document.getElementById('timer').textContent = ((Date.now() - startTime) / 1000).toFixed(3);
+                }, 47);
+            }
+            element.classList.add('correct');
+            nextNum++;
+            if (nextNum > 25) {
+                clearInterval(timerInterval);
+                isRunning = false;
+                const time = ((Date.now() - startTime) / 1000).toFixed(3);
+                saveRecord(time);
+                playSound(1046, 'sine', 0.5); // ゴール音
+            } else {
+                document.getElementById('target').textContent = nextNum;
+            }
+        } else if (isRunning) {
+            playSound(150, 'sawtooth', 0.2, 0.05);
+            element.classList.add('wrong');
+            setTimeout(() => element.classList.remove('wrong'), 200);
+        }
+    }
+
+    function saveRecord(time) {
+        const name = document.getElementById('playerName').value.trim() || 'ななしさん';
+        let records = [];
+        try {
+            records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        } catch(e) { records = []; }
+        
+        records.push({ name, time: parseFloat(time) });
+        records.sort((a, b) => a.time - b.time);
+        records = records.slice(0, 10);
+        
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+        updateRankingDisplay();
+        setTimeout(() => alert(`【記録更新】\n${name}：${time}秒`), 100);
+    }
+
+    function updateRankingDisplay() {
+        let records = [];
+        try {
+            records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        } catch(e) { records = []; }
+        
+        const list = document.getElementById('rankingList');
+        if (records.length === 0) {
+            list.innerHTML = '<p style="text-align:center; color:#999; font-size:0.8rem;">まだ記録がありません</p>';
+            return;
+        }
+        list.innerHTML = records.map((r, i) => `
+            <div class="ranking-item">
+                <span>${i + 1}. <span class="r-name">${escapeHtml(r.name)}</span></span>
+                <span class="r-time">${r.time.toFixed(3)}s</span>
+            </div>
+        `).join('');
+    }
+
+    function clearRecords() {
+        if (confirm('すべてのランキングをリセットしますか？')) {
+            localStorage.removeItem(STORAGE_KEY);
+            updateRankingDisplay();
+        }
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+</script>
+</body>
+</html>
