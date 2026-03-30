@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Speed Touch 25 - Ultimate Edition</title>
+    <title>Speed Touch 25 - Hidden Edition</title>
     <style>
         :root {
             --primary-color: #4285f4;
             --success-color: #34a853;
             --error-color: #ea4335;
-            --bg-color: #ffffff; /* サイトに馴染むよう白に設定 */
+            --bg-color: #ffffff;
             --panel-color: #f8f9fa;
         }
 
-        /* 1. 横幅いっぱいに広げるための設定 */
         html, body {
             margin: 0;
             padding: 0;
@@ -28,7 +27,7 @@
 
         .container {
             width: 100%;
-            max-width: 500px; /* PCでの見栄えを考慮 */
+            max-width: 500px;
             padding: 10px;
             box-sizing: border-box;
             display: flex;
@@ -58,7 +57,6 @@
             text-align: center;
         }
 
-        /* 2. グリッドのレスポンシブ化 */
         .grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -79,6 +77,16 @@
             cursor: pointer;
             box-shadow: 0 3px 0 #ccc;
             transition: transform 0.05s;
+        }
+
+        /* 【新設】開始前は数字を非表示にする */
+        .cell span {
+            visibility: hidden;
+        }
+
+        /* 【新設】gridに.playingクラスがついた時だけ数字を表示 */
+        .grid.playing .cell span {
+            visibility: visible;
         }
 
         .cell:active { transform: translateY(2px); box-shadow: 0 1px 0 #ccc; }
@@ -156,13 +164,11 @@
     let startTime, timerInterval, isRunning = false;
     let audioCtx = null;
 
-    // 初期化処理
     window.addEventListener('DOMContentLoaded', () => {
         updateRankingDisplay();
-        createBoard(true); // プレビュー用の盤面
+        createBoard(true); 
     });
 
-    // 音声生成
     function playSound(freq, type, duration, vol=0.1) {
         try {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -183,6 +189,8 @@
     function createBoard(isPreview = false) {
         const grid = document.getElementById('grid');
         grid.innerHTML = '';
+        grid.classList.remove('playing'); // 数字を隠す状態に戻す
+
         const nums = Array.from({length: 25}, (_, i) => i + 1);
         if(!isPreview) {
             for(let i=nums.length-1; i>0; i--){
@@ -193,7 +201,8 @@
         nums.forEach(num => {
             const cell = document.createElement('div');
             cell.className = 'cell';
-            cell.textContent = num;
+            // 数字をspanで囲って制御できるようにする
+            cell.innerHTML = `<span>${num}</span>`;
             cell.onclick = () => handleTouch(num, cell);
             grid.appendChild(cell);
         });
@@ -206,10 +215,17 @@
         nextNum = 1;
         document.getElementById('timer').textContent = "0.000";
         document.getElementById('target').textContent = "1";
+        
         createBoard(false);
+        
+        // 【重要】盤面にクラスを付与して数字を表示
+        document.getElementById('grid').classList.add('playing');
     }
 
     function handleTouch(num, element) {
+        // ゲームが開始（gridにplayingがついている）していない場合は反応させない
+        if (!document.getElementById('grid').classList.contains('playing')) return;
+
         if (num === nextNum) {
             playSound(880, 'sine', 0.1);
             if (nextNum === 1) {
@@ -226,7 +242,7 @@
                 isRunning = false;
                 const time = ((Date.now() - startTime) / 1000).toFixed(3);
                 saveRecord(time);
-                playSound(1046, 'sine', 0.5); // ゴール音
+                playSound(1046, 'sine', 0.5);
             } else {
                 document.getElementById('target').textContent = nextNum;
             }
