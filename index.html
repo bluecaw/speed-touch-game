@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Speed Touch 25 - Hidden Edition</title>
+    <title>Speed Touch 25 - Clear Edition</title>
     <style>
         :root {
             --primary-color: #4285f4;
@@ -76,21 +76,24 @@
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 3px 0 #ccc;
-            transition: transform 0.05s;
+            transition: all 0.1s;
         }
 
-        /* 【新設】開始前は数字を非表示にする */
-        .cell span {
-            visibility: hidden;
-        }
-
-        /* 【新設】gridに.playingクラスがついた時だけ数字を表示 */
-        .grid.playing .cell span {
-            visibility: visible;
-        }
+        /* 開始前は数字を非表示 */
+        .cell span { visibility: hidden; }
+        .grid.playing .cell span { visibility: visible; }
 
         .cell:active { transform: translateY(2px); box-shadow: 0 1px 0 #ccc; }
-        .cell.correct { visibility: hidden; pointer-events: none; }
+
+        /* 【修正】正解した時のスタイル：消さずに色を変える */
+        .cell.correct { 
+            background-color: #e0e0e0; 
+            color: #bbb; 
+            box-shadow: none; 
+            transform: translateY(2px);
+            cursor: default;
+        }
+
         .cell.wrong { background-color: var(--error-color); color: white; animation: shake 0.2s; }
 
         @keyframes shake {
@@ -189,7 +192,7 @@
     function createBoard(isPreview = false) {
         const grid = document.getElementById('grid');
         grid.innerHTML = '';
-        grid.classList.remove('playing'); // 数字を隠す状態に戻す
+        grid.classList.remove('playing');
 
         const nums = Array.from({length: 25}, (_, i) => i + 1);
         if(!isPreview) {
@@ -201,7 +204,6 @@
         nums.forEach(num => {
             const cell = document.createElement('div');
             cell.className = 'cell';
-            // 数字をspanで囲って制御できるようにする
             cell.innerHTML = `<span>${num}</span>`;
             cell.onclick = () => handleTouch(num, cell);
             grid.appendChild(cell);
@@ -215,16 +217,15 @@
         nextNum = 1;
         document.getElementById('timer').textContent = "0.000";
         document.getElementById('target').textContent = "1";
-        
         createBoard(false);
-        
-        // 【重要】盤面にクラスを付与して数字を表示
         document.getElementById('grid').classList.add('playing');
     }
 
     function handleTouch(num, element) {
-        // ゲームが開始（gridにplayingがついている）していない場合は反応させない
         if (!document.getElementById('grid').classList.contains('playing')) return;
+        
+        // すでに正解済みのセルなら何もしない
+        if (element.classList.contains('correct')) return;
 
         if (num === nextNum) {
             playSound(880, 'sine', 0.1);
@@ -235,7 +236,10 @@
                     document.getElementById('timer').textContent = ((Date.now() - startTime) / 1000).toFixed(3);
                 }, 47);
             }
+            
+            // 正解スタイルを適用（消さずに残る）
             element.classList.add('correct');
+            
             nextNum++;
             if (nextNum > 25) {
                 clearInterval(timerInterval);
@@ -259,11 +263,9 @@
         try {
             records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
         } catch(e) { records = []; }
-        
         records.push({ name, time: parseFloat(time) });
         records.sort((a, b) => a.time - b.time);
         records = records.slice(0, 10);
-        
         localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
         updateRankingDisplay();
         setTimeout(() => alert(`【記録更新】\n${name}：${time}秒`), 100);
@@ -274,7 +276,6 @@
         try {
             records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
         } catch(e) { records = []; }
-        
         const list = document.getElementById('rankingList');
         if (records.length === 0) {
             list.innerHTML = '<p style="text-align:center; color:#999; font-size:0.8rem;">まだ記録がありません</p>';
