@@ -85,12 +85,15 @@
 
         .cell:active { transform: translateY(2px); box-shadow: 0 1px 0 #ccc; }
 
+        /* 【修正ポイント】正解したときに透明にして消す設定 */
         .cell.correct { 
-            background-color: #e0e0e0; 
-            color: #bbb; 
+            background-color: transparent; 
+            color: transparent; 
             box-shadow: none; 
             transform: translateY(2px);
             cursor: default;
+            opacity: 0;
+            transition: opacity 0.3s ease; /* 0.3秒かけて消える */
         }
 
         .cell.wrong { background-color: var(--error-color); color: white; animation: shake 0.2s; }
@@ -113,7 +116,6 @@
             color: white;
             font-weight: bold;
         }
-        .btn-reset { background-color: #666; font-size: 0.9rem; padding: 10px; }
 
         .ranking {
             width: 100%;
@@ -168,7 +170,7 @@
         projectId: "speedtouch25-ca738",
         storageBucket: "speedtouch25-ca738.appspot.com",
         messagingSenderId: "865990228190",
-        appId: "1:865990228190:web:96e1a76f2648507851a719" // 画像から推測した値です。もし違えば修正してください。
+        appId: "1:865990228190:web:96e1a76f2648507851a719"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -245,7 +247,10 @@
 
         if (num === nextNum) {
             playSound(880, 'sine', 0.1);
+            
+            // 正解クラスを追加（CSSで消える）
             element.classList.add('correct');
+            
             nextNum++;
             if (nextNum > 25) {
                 clearInterval(timerInterval);
@@ -263,7 +268,6 @@
         }
     }
 
-    // --- Firebase 保存処理 ---
     async function saveRecord(time) {
         const name = document.getElementById('playerName').value.trim() || 'ななしさん';
         try {
@@ -273,14 +277,12 @@
                 createdAt: serverTimestamp()
             });
             updateRankingDisplay();
-            setTimeout(() => alert(`【記録更新】\n${name}：${time}秒\n世界ランキングに登録しました！`), 100);
+            setTimeout(() => alert(`【記録更新】\n${name}：${time}秒\nランキングに登録しました！`), 100);
         } catch (e) {
             console.error("保存失敗:", e);
-            alert("保存に失敗しました。ルール設定を確認してください。");
         }
     }
 
-    // --- Firebase 取得表示処理 ---
     async function updateRankingDisplay() {
         const list = document.getElementById('rankingList');
         try {
@@ -288,18 +290,18 @@
             const querySnapshot = await getDocs(q);
             
             if (querySnapshot.empty) {
-                list.innerHTML = '<p style="text-align:center; color:#999; font-size:0.8rem;">まだ記録がありません</p>';
+                list.innerHTML = '<p style="text-align:center; color:#999; font-size:0.8rem;">記録待ち...</p>';
                 return;
             }
 
             let html = "";
             let i = 1;
-            querySnapshot.forEach((doc) => {
-                const r = doc.data();
+            querySnapshot.forEach((docSnap) => {
+                const r = docSnap.data();
                 html += `
                     <div class="ranking-item">
                         <span>${i}. <span class="r-name">${escapeHtml(r.name)}</span></span>
-                        <span class="r-time">${r.time.toFixed(3)}s</span>
+                        <span class="r-time">${Number(r.time).toFixed(3)}s</span>
                     </div>
                 `;
                 i++;
@@ -307,7 +309,6 @@
             list.innerHTML = html;
         } catch (e) {
             console.error("読み込み失敗:", e);
-            list.innerHTML = '<p style="color:red; font-size:0.8rem;">ランキングの取得に失敗しました</p>';
         }
     }
 
