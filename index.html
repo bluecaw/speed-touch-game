@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Speed Touch 25 - Click to Show</title>
+    <title>Speed Touch 25 - Instant Start</title>
     <style>
         :root {
             --primary-color: #4285f4;
@@ -57,7 +57,6 @@
             text-align: center;
         }
 
-        /* 【修正】初期状態は非表示にする */
         .grid {
             display: none; 
             grid-template-columns: repeat(5, 1fr);
@@ -66,7 +65,6 @@
             aspect-ratio: 1 / 1;
         }
 
-        /* 【修正】playingクラスがついた時だけ表示する */
         .grid.playing {
             display: grid;
         }
@@ -170,7 +168,6 @@
 
     window.addEventListener('DOMContentLoaded', () => {
         updateRankingDisplay();
-        // 初期状態ではボードを作らない（または非表示のままにする）
         createBoard(true); 
     });
 
@@ -195,7 +192,6 @@
         const grid = document.getElementById('grid');
         grid.innerHTML = '';
         
-        // プレビュー時はplayingクラスを付けない（＝非表示のまま）
         if (!isPreview) {
             grid.classList.add('playing');
         } else {
@@ -220,32 +216,36 @@
 
     function initGame() {
         if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        
+        // 【修正】既存のタイマーをクリア
         clearInterval(timerInterval);
-        isRunning = false;
+        
         nextNum = 1;
-        document.getElementById('timer').textContent = "0.000";
         document.getElementById('target').textContent = "1";
         
-        // createBoardの中で .grid に .playing クラスが付与され表示される
+        // ボード作成
         createBoard(false);
+        
+        // 【修正】ボタンを押した瞬間から計測開始
+        isRunning = true;
+        startTime = Date.now();
+        timerInterval = setInterval(() => {
+            document.getElementById('timer').textContent = ((Date.now() - startTime) / 1000).toFixed(3);
+        }, 47);
     }
 
     function handleTouch(num, element) {
-        if (!document.getElementById('grid').classList.contains('playing')) return;
+        if (!isRunning) return;
         if (element.classList.contains('correct')) return;
 
         if (num === nextNum) {
             playSound(880, 'sine', 0.1);
-            if (nextNum === 1) {
-                isRunning = true;
-                startTime = Date.now();
-                timerInterval = setInterval(() => {
-                    document.getElementById('timer').textContent = ((Date.now() - startTime) / 1000).toFixed(3);
-                }, 47);
-            }
+            
             element.classList.add('correct');
             nextNum++;
+            
             if (nextNum > 25) {
+                // 【修正】タイマー停止
                 clearInterval(timerInterval);
                 isRunning = false;
                 const time = ((Date.now() - startTime) / 1000).toFixed(3);
@@ -254,7 +254,8 @@
             } else {
                 document.getElementById('target').textContent = nextNum;
             }
-        } else if (isRunning) {
+        } else {
+            // お手つき
             playSound(150, 'sawtooth', 0.2, 0.05);
             element.classList.add('wrong');
             setTimeout(() => element.classList.remove('wrong'), 200);
