@@ -3,138 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Speed Touch 25 - Firebase Edition</title>
+    <title>Speed Touch 25 - Rainbow Firebase Edition</title>
     <style>
         :root {
             --primary-color: #4285f4;
             --success-color: #34a853;
             --error-color: #ea4335;
-            --bg-color: #ffffff;
-            --panel-color: #f8f9fa;
+            --panel-bg: rgba(255, 255, 255, 0.85);
         }
 
+        /* --- 虹色アニメーション背景の設定 --- */
         html, body {
             margin: 0;
             padding: 0;
             width: 100%;
+            min-height: 100vh;
             overflow-x: hidden;
-            background-color: var(--bg-color);
-            font-family: 'Helvetica Neue', Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            
+            /* 6色のグラデーション */
+            background: linear-gradient(120deg, #ffafbd, #ffc3a0, #a8edea, #fed6e3, #c3cfe2, #d299c2);
+            background-size: 400% 400%;
+            animation: rainbowBG 15s ease infinite;
         }
 
+        @keyframes rainbowBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- メインコンテナ（すりガラス風） --- */
         .container {
             width: 100%;
             max-width: 500px;
-            padding: 10px;
+            padding: 20px 15px;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
             align-items: center;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 24px;
+            margin: 20px 0;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
         }
 
-        .info-panel { text-align: center; margin-bottom: 10px; width: 100%; }
-        .timer { font-size: 3rem; font-weight: bold; color: #333; font-variant-numeric: tabular-nums; line-height: 1; }
-        .next-number { font-size: 1.2rem; color: var(--primary-color); font-weight: bold; margin-top: 5px; }
+        .info-panel { text-align: center; margin-bottom: 15px; width: 100%; }
+        .timer { font-size: 3.5rem; font-weight: bold; color: #444; font-variant-numeric: tabular-nums; line-height: 1; text-shadow: 1px 1px 2px rgba(255,255,255,0.5); }
+        .next-number { font-size: 1.4rem; color: var(--primary-color); font-weight: bold; margin-top: 5px; }
 
         .setup-area {
             width: 100%;
             display: flex;
             flex-direction: column;
             gap: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         input[type="text"] {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
+            padding: 14px;
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 12px;
+            font-size: 1.1rem;
             box-sizing: border-box;
             text-align: center;
+            background: rgba(255,255,255,0.6);
+            outline: none;
         }
 
         .grid {
             display: none; 
             grid-template-columns: repeat(5, 1fr);
-            gap: 8px;
+            gap: 10px;
             width: 100%;
             aspect-ratio: 1 / 1;
         }
 
-        .grid.playing {
-            display: grid;
-        }
+        .grid.playing { display: grid; }
 
         .cell {
-            background-color: var(--panel-color);
-            border: 1px solid #ddd;
-            border-radius: 8px;
+            background-color: var(--panel-bg);
+            border-radius: 12px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: clamp(1.2rem, 5vw, 1.8rem);
+            font-size: clamp(1.4rem, 6vw, 2rem);
             font-weight: bold;
+            color: #444;
             cursor: pointer;
-            box-shadow: 0 3px 0 #ccc;
-            transition: all 0.1s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.1s, opacity 0.3s;
         }
 
-        .cell:active { transform: translateY(2px); box-shadow: 0 1px 0 #ccc; }
+        .cell:active { transform: scale(0.95); }
 
-        /* 【修正ポイント】正解したときに透明にして消す設定 */
+        /* --- 【演出】正解したときに消える --- */
         .cell.correct { 
-            background-color: transparent; 
-            color: transparent; 
-            box-shadow: none; 
-            transform: translateY(2px);
-            cursor: default;
             opacity: 0;
-            transition: opacity 0.3s ease; /* 0.3秒かけて消える */
+            pointer-events: none; /* クリック不可にする */
+            transform: scale(1.2); /* 少し大きくしながら消える */
         }
 
         .cell.wrong { background-color: var(--error-color); color: white; animation: shake 0.2s; }
 
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-4px); }
-            75% { transform: translateX(4px); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
 
-        .controls { width: 100%; margin: 20px 0; display: flex; flex-direction: column; gap: 8px; }
         button {
             width: 100%;
-            padding: 15px;
-            font-size: 1.1rem;
+            padding: 16px;
+            font-size: 1.2rem;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
             background-color: var(--primary-color);
             color: white;
             font-weight: bold;
+            box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);
+            transition: filter 0.2s;
         }
+        button:active { filter: brightness(0.9); }
 
         .ranking {
             width: 100%;
-            background: #fdfdfd;
+            background: rgba(255, 255, 255, 0.4);
             padding: 15px;
-            border-radius: 12px;
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
-            margin-top: 10px;
+            border-radius: 16px;
+            margin-top: 20px;
         }
-        .ranking h3 { margin: 0 0 10px 0; font-size: 1rem; color: #555; text-align: center; border-bottom: 2px solid var(--primary-color); padding-bottom: 5px; }
+        .ranking h3 { margin: 0 0 10px 0; font-size: 1.1rem; color: #444; text-align: center; border-bottom: 2px solid var(--primary-color); padding-bottom: 5px; }
         .ranking-item {
             display: flex;
             justify-content: space-between;
-            padding: 6px 0;
-            border-bottom: 1px solid #eee;
-            font-size: 0.95rem;
+            padding: 8px 5px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            font-size: 1rem;
         }
         .r-name { font-weight: bold; color: #333; }
-        .r-time { font-family: monospace; color: #666; }
+        .r-time { font-family: 'Courier New', Courier, monospace; font-weight: bold; color: #444; }
     </style>
 </head>
 <body>
@@ -146,14 +161,14 @@
     </div>
 
     <div class="setup-area">
-        <input type="text" id="playerName" placeholder="名前を入力" maxlength="10">
-        <button id="startBtn">ゲーム開始 / リセット</button>
+        <input type="text" id="playerName" placeholder="ニックネームを入力" maxlength="10">
+        <button id="startBtn">GAME START / RESET</button>
     </div>
 
     <div class="grid" id="grid"></div>
 
     <div class="ranking">
-        <h3>🏆 WORLD RANKING (TOP 10)</h3>
+        <h3>🏆 WORLD TOP 10</h3>
         <div id="rankingList">読み込み中...</div>
     </div>
 </div>
@@ -163,7 +178,7 @@
     import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } 
     from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // --- Firebase 設定 ---
+    // --- Firebase Config ---
     const firebaseConfig = {
         apiKey: "AIzaSyDmERQEIQKssVy12KodGDjwfIDbWcwBOmo",
         authDomain: "speedtouch25-ca738.firebaseapp.com",
@@ -177,16 +192,13 @@
     const db = getFirestore(app);
     const rankingCol = collection(db, "rankings");
 
-    // --- ゲーム変数 ---
     let nextNum = 1;
     let startTime, timerInterval, isRunning = false;
     let audioCtx = null;
 
-    // --- 初期表示 ---
     updateRankingDisplay();
     createBoard(true);
 
-    // --- ボタンイベント登録 ---
     document.getElementById('startBtn').addEventListener('click', initGame);
 
     function playSound(freq, type, duration, vol=0.1) {
@@ -203,7 +215,7 @@
             gain.connect(audioCtx.destination);
             osc.start();
             osc.stop(audioCtx.currentTime + duration);
-        } catch(e) { console.log("Audio Error"); }
+        } catch(e) {}
     }
 
     function createBoard(isPreview = false) {
@@ -233,6 +245,7 @@
         clearInterval(timerInterval);
         nextNum = 1;
         document.getElementById('target').textContent = "1";
+        document.getElementById('timer').textContent = "0.000";
         createBoard(false);
         isRunning = true;
         startTime = Date.now();
@@ -247,9 +260,7 @@
 
         if (num === nextNum) {
             playSound(880, 'sine', 0.1);
-            
-            // 正解クラスを追加（CSSで消える）
-            element.classList.add('correct');
+            element.classList.add('correct'); // これでCSSの演出が走り、消えます
             
             nextNum++;
             if (nextNum > 25) {
@@ -269,7 +280,7 @@
     }
 
     async function saveRecord(time) {
-        const name = document.getElementById('playerName').value.trim() || 'ななしさん';
+        const name = document.getElementById('playerName').value.trim() || 'Guest';
         try {
             await addDoc(rankingCol, {
                 name: name,
@@ -277,9 +288,9 @@
                 createdAt: serverTimestamp()
             });
             updateRankingDisplay();
-            setTimeout(() => alert(`【記録更新】\n${name}：${time}秒\nランキングに登録しました！`), 100);
+            setTimeout(() => alert(`FINISH!\nTime: ${time}s\nWorld ranking updated.`), 100);
         } catch (e) {
-            console.error("保存失敗:", e);
+            console.error("Firebase Save Error:", e);
         }
     }
 
@@ -290,7 +301,7 @@
             const querySnapshot = await getDocs(q);
             
             if (querySnapshot.empty) {
-                list.innerHTML = '<p style="text-align:center; color:#999; font-size:0.8rem;">記録待ち...</p>';
+                list.innerHTML = '<p style="text-align:center; color:#666; font-size:0.9rem;">No records yet.</p>';
                 return;
             }
 
@@ -308,7 +319,7 @@
             });
             list.innerHTML = html;
         } catch (e) {
-            console.error("読み込み失敗:", e);
+            console.error("Firebase Load Error:", e);
         }
     }
 
