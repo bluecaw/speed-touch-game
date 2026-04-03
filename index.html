@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Speed Touch 25 - Instant Start</title>
+    <title>Speed Touch 25 - Vanish Edition</title>
     <style>
         :root {
             --primary-color: #4285f4;
@@ -80,17 +80,15 @@
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 3px 0 #ccc;
-            transition: all 0.1s;
+            transition: transform 0.1s;
         }
 
         .cell:active { transform: translateY(2px); box-shadow: 0 1px 0 #ccc; }
 
+        /* 【修正】正解したパネルを非表示にする（場所は残す） */
         .cell.correct { 
-            background-color: #e0e0e0; 
-            color: #bbb; 
-            box-shadow: none; 
-            transform: translateY(2px);
-            cursor: default;
+            visibility: hidden;
+            pointer-events: none; /* クリックできないようにする */
         }
 
         .cell.wrong { background-color: var(--error-color); color: white; animation: shake 0.2s; }
@@ -216,17 +214,12 @@
 
     function initGame() {
         if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-        
-        // 【修正】既存のタイマーをクリア
         clearInterval(timerInterval);
         
         nextNum = 1;
         document.getElementById('target').textContent = "1";
-        
-        // ボード作成
         createBoard(false);
         
-        // 【修正】ボタンを押した瞬間から計測開始
         isRunning = true;
         startTime = Date.now();
         timerInterval = setInterval(() => {
@@ -236,16 +229,17 @@
 
     function handleTouch(num, element) {
         if (!isRunning) return;
+        // 既に消えている（正解済み）パネルは無視
         if (element.classList.contains('correct')) return;
 
         if (num === nextNum) {
             playSound(880, 'sine', 0.1);
             
+            // パネルを消す（CSSでvisibility: hiddenが発動）
             element.classList.add('correct');
             nextNum++;
             
             if (nextNum > 25) {
-                // 【修正】タイマー停止
                 clearInterval(timerInterval);
                 isRunning = false;
                 const time = ((Date.now() - startTime) / 1000).toFixed(3);
@@ -255,7 +249,6 @@
                 document.getElementById('target').textContent = nextNum;
             }
         } else {
-            // お手つき
             playSound(150, 'sawtooth', 0.2, 0.05);
             element.classList.add('wrong');
             setTimeout(() => element.classList.remove('wrong'), 200);
