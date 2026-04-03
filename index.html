@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Speed Touch 25 - Vanish Edition</title>
+    <title>Speed Touch 25 - Secure Edition</title>
     <style>
         :root {
             --primary-color: #4285f4;
@@ -85,10 +85,9 @@
 
         .cell:active { transform: translateY(2px); box-shadow: 0 1px 0 #ccc; }
 
-        /* 【修正】正解したパネルを非表示にする（場所は残す） */
         .cell.correct { 
             visibility: hidden;
-            pointer-events: none; /* クリックできないようにする */
+            pointer-events: none;
         }
 
         .cell.wrong { background-color: var(--error-color); color: white; animation: shake 0.2s; }
@@ -189,12 +188,8 @@
     function createBoard(isPreview = false) {
         const grid = document.getElementById('grid');
         grid.innerHTML = '';
-        
-        if (!isPreview) {
-            grid.classList.add('playing');
-        } else {
-            grid.classList.remove('playing');
-        }
+        if (!isPreview) grid.classList.add('playing');
+        else grid.classList.remove('playing');
 
         const nums = Array.from({length: 25}, (_, i) => i + 1);
         if(!isPreview) {
@@ -215,11 +210,9 @@
     function initGame() {
         if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         clearInterval(timerInterval);
-        
         nextNum = 1;
         document.getElementById('target').textContent = "1";
         createBoard(false);
-        
         isRunning = true;
         startTime = Date.now();
         timerInterval = setInterval(() => {
@@ -229,16 +222,12 @@
 
     function handleTouch(num, element) {
         if (!isRunning) return;
-        // 既に消えている（正解済み）パネルは無視
         if (element.classList.contains('correct')) return;
 
         if (num === nextNum) {
             playSound(880, 'sine', 0.1);
-            
-            // パネルを消す（CSSでvisibility: hiddenが発動）
             element.classList.add('correct');
             nextNum++;
-            
             if (nextNum > 25) {
                 clearInterval(timerInterval);
                 isRunning = false;
@@ -287,10 +276,17 @@
         `).join('');
     }
 
+    // 【修正箇所】パスワード保護付き消去機能
     function clearRecords() {
-        if (confirm('すべてのランキングをリセットしますか？')) {
-            localStorage.removeItem(STORAGE_KEY);
-            updateRankingDisplay();
+        const password = prompt('ランキングを消去するにはパスワードを入力してください:');
+        if (password === '1111') {
+            if (confirm('本当にすべてのランキングをリセットしますか？')) {
+                localStorage.removeItem(STORAGE_KEY);
+                updateRankingDisplay();
+                alert('ランキングを消去しました。');
+            }
+        } else if (password !== null) {
+            alert('パスワードが違います。');
         }
     }
 
