@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Speed Touch 25 - Clear Edition</title>
+    <title>Speed Touch 25 - Click to Show</title>
     <style>
         :root {
             --primary-color: #4285f4;
@@ -57,12 +57,18 @@
             text-align: center;
         }
 
+        /* 【修正】初期状態は非表示にする */
         .grid {
-            display: grid;
+            display: none; 
             grid-template-columns: repeat(5, 1fr);
             gap: 8px;
             width: 100%;
             aspect-ratio: 1 / 1;
+        }
+
+        /* 【修正】playingクラスがついた時だけ表示する */
+        .grid.playing {
+            display: grid;
         }
 
         .cell {
@@ -79,13 +85,8 @@
             transition: all 0.1s;
         }
 
-        /* 開始前は数字を非表示 */
-        .cell span { visibility: hidden; }
-        .grid.playing .cell span { visibility: visible; }
-
         .cell:active { transform: translateY(2px); box-shadow: 0 1px 0 #ccc; }
 
-        /* 【修正】正解した時のスタイル：消さずに色を変える */
         .cell.correct { 
             background-color: #e0e0e0; 
             color: #bbb; 
@@ -146,7 +147,7 @@
 
     <div class="setup-area">
         <input type="text" id="playerName" placeholder="名前を入力（例：おかだ）" maxlength="10">
-        <button onclick="initGame()">ゲーム開始3 / リセット</button>
+        <button onclick="initGame()">ゲーム開始 / リセット</button>
     </div>
 
     <div class="grid" id="grid"></div>
@@ -169,6 +170,7 @@
 
     window.addEventListener('DOMContentLoaded', () => {
         updateRankingDisplay();
+        // 初期状態ではボードを作らない（または非表示のままにする）
         createBoard(true); 
     });
 
@@ -192,7 +194,13 @@
     function createBoard(isPreview = false) {
         const grid = document.getElementById('grid');
         grid.innerHTML = '';
-        grid.classList.remove('playing');
+        
+        // プレビュー時はplayingクラスを付けない（＝非表示のまま）
+        if (!isPreview) {
+            grid.classList.add('playing');
+        } else {
+            grid.classList.remove('playing');
+        }
 
         const nums = Array.from({length: 25}, (_, i) => i + 1);
         if(!isPreview) {
@@ -217,14 +225,13 @@
         nextNum = 1;
         document.getElementById('timer').textContent = "0.000";
         document.getElementById('target').textContent = "1";
+        
+        // createBoardの中で .grid に .playing クラスが付与され表示される
         createBoard(false);
-        document.getElementById('grid').classList.add('playing');
     }
 
     function handleTouch(num, element) {
         if (!document.getElementById('grid').classList.contains('playing')) return;
-        
-        // すでに正解済みのセルなら何もしない
         if (element.classList.contains('correct')) return;
 
         if (num === nextNum) {
@@ -236,10 +243,7 @@
                     document.getElementById('timer').textContent = ((Date.now() - startTime) / 1000).toFixed(3);
                 }, 47);
             }
-            
-            // 正解スタイルを適用（消さずに残る）
             element.classList.add('correct');
-            
             nextNum++;
             if (nextNum > 25) {
                 clearInterval(timerInterval);
