@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Speed Touch 25 - Secure Edition</title>
+    <title>Speed Touch 25 - Firebase Edition</title>
     <style>
         :root {
             --primary-color: #4285f4;
@@ -80,14 +80,17 @@
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 3px 0 #ccc;
-            transition: transform 0.1s;
+            transition: all 0.1s;
         }
 
         .cell:active { transform: translateY(2px); box-shadow: 0 1px 0 #ccc; }
 
         .cell.correct { 
-            visibility: hidden;
-            pointer-events: none;
+            background-color: #e0e0e0; 
+            color: #bbb; 
+            box-shadow: none; 
+            transform: translateY(2px);
+            cursor: default;
         }
 
         .cell.wrong { background-color: var(--error-color); color: white; animation: shake 0.2s; }
@@ -141,32 +144,48 @@
     </div>
 
     <div class="setup-area">
-        <input type="text" id="playerName" placeholder="名前を入力（例：おかだ）" maxlength="10">
-        <button onclick="initGame()">ゲーム開始 / リセット</button>
+        <input type="text" id="playerName" placeholder="名前を入力" maxlength="10">
+        <button id="startBtn">ゲーム開始 / リセット</button>
     </div>
 
     <div class="grid" id="grid"></div>
 
-    <div class="controls">
-        <button class="btn-reset" onclick="clearRecords()">ランキング全消去</button>
-    </div>
-
     <div class="ranking">
-        <h3>🏆 TOP 10 RANKING</h3>
-        <div id="rankingList"></div>
+        <h3>🏆 WORLD RANKING (TOP 10)</h3>
+        <div id="rankingList">読み込み中...</div>
     </div>
 </div>
 
-<script>
-    const STORAGE_KEY = 'speed_touch_vFinal';
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } 
+    from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // --- Firebase 設定 ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyDmERQEIQKssVy12KodGDjwfIDbWcwBOmo",
+        authDomain: "speedtouch25-ca738.firebaseapp.com",
+        projectId: "speedtouch25-ca738",
+        storageBucket: "speedtouch25-ca738.appspot.com",
+        messagingSenderId: "865990228190",
+        appId: "1:865990228190:web:96e1a76f2648507851a719" // 画像から推測した値です。もし違えば修正してください。
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const rankingCol = collection(db, "rankings");
+
+    // --- ゲーム変数 ---
     let nextNum = 1;
     let startTime, timerInterval, isRunning = false;
     let audioCtx = null;
 
-    window.addEventListener('DOMContentLoaded', () => {
-        updateRankingDisplay();
-        createBoard(true); 
-    });
+    // --- 初期表示 ---
+    updateRankingDisplay();
+    createBoard(true);
+
+    // --- ボタンイベント登録 ---
+    document.getElementById('startBtn').addEventListener('click', initGame);
 
     function playSound(freq, type, duration, vol=0.1) {
         try {
@@ -244,49 +263,51 @@
         }
     }
 
-    function saveRecord(time) {
+    // --- Firebase 保存処理 ---
+    async function saveRecord(time) {
         const name = document.getElementById('playerName').value.trim() || 'ななしさん';
-        let records = [];
         try {
-            records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        } catch(e) { records = []; }
-        records.push({ name, time: parseFloat(time) });
-        records.sort((a, b) => a.time - b.time);
-        records = records.slice(0, 10);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-        updateRankingDisplay();
-        setTimeout(() => alert(`【記録更新】\n${name}：${time}秒`), 100);
-    }
-
-    function updateRankingDisplay() {
-        let records = [];
-        try {
-            records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        } catch(e) { records = []; }
-        const list = document.getElementById('rankingList');
-        if (records.length === 0) {
-            list.innerHTML = '<p style="text-align:center; color:#999; font-size:0.8rem;">まだ記録がありません</p>';
-            return;
+            await addDoc(rankingCol, {
+                name: name,
+                time: parseFloat(time),
+                createdAt: serverTimestamp()
+            });
+            updateRankingDisplay();
+            setTimeout(() => alert(`【記録更新】\n${name}：${time}秒\n世界ランキングに登録しました！`), 100);
+        } catch (e) {
+            console.error("保存失敗:", e);
+            alert("保存に失敗しました。ルール設定を確認してください。");
         }
-        list.innerHTML = records.map((r, i) => `
-            <div class="ranking-item">
-                <span>${i + 1}. <span class="r-name">${escapeHtml(r.name)}</span></span>
-                <span class="r-time">${r.time.toFixed(3)}s</span>
-            </div>
-        `).join('');
     }
 
-    // 【修正箇所】パスワード保護付き消去機能
-    function clearRecords() {
-        const password = prompt('ランキングを消去するにはパスワードを入力してください:');
-        if (password === '1111') {
-            if (confirm('本当にすべてのランキングをリセットしますか？')) {
-                localStorage.removeItem(STORAGE_KEY);
-                updateRankingDisplay();
-                alert('ランキングを消去しました。');
+    // --- Firebase 取得表示処理 ---
+    async function updateRankingDisplay() {
+        const list = document.getElementById('rankingList');
+        try {
+            const q = query(rankingCol, orderBy("time", "asc"), limit(10));
+            const querySnapshot = await getDocs(q);
+            
+            if (querySnapshot.empty) {
+                list.innerHTML = '<p style="text-align:center; color:#999; font-size:0.8rem;">まだ記録がありません</p>';
+                return;
             }
-        } else if (password !== null) {
-            alert('パスワードが違います。');
+
+            let html = "";
+            let i = 1;
+            querySnapshot.forEach((doc) => {
+                const r = doc.data();
+                html += `
+                    <div class="ranking-item">
+                        <span>${i}. <span class="r-name">${escapeHtml(r.name)}</span></span>
+                        <span class="r-time">${r.time.toFixed(3)}s</span>
+                    </div>
+                `;
+                i++;
+            });
+            list.innerHTML = html;
+        } catch (e) {
+            console.error("読み込み失敗:", e);
+            list.innerHTML = '<p style="color:red; font-size:0.8rem;">ランキングの取得に失敗しました</p>';
         }
     }
 
