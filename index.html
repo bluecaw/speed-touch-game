@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Speed Touch 25 - BGM Control Edition</title>
+    <title>Speed Touch 25 - Mobile Optimized</title>
     <style>
         :root {
             --primary-color: #4285f4;
@@ -31,7 +31,7 @@
             width: 100%; max-width: 500px; padding: 20px 15px; box-sizing: border-box;
             display: flex; flex-direction: column; align-items: center;
             background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px); border-radius: 24px; margin: 20px 0;
+            -webkit-backdrop-filter: blur(10px); border-radius: 24px; margin: 10px 0;
             box-shadow: 0 8px 32px rgba(0,0,0,0.1);
         }
 
@@ -41,32 +41,43 @@
 
         .setup-area { width: 100%; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
 
-        .input-group { display: flex; gap: 8px; width: 100%; }
+        /* 【修正】モバイルで見切れないように折り返しを許可 */
+        .input-group { 
+            display: flex; 
+            gap: 8px; 
+            width: 100%; 
+            flex-wrap: wrap; /* 狭い時に折り返す */
+        }
+
         input[type="text"] {
-            flex: 1; padding: 14px; border: 2px solid rgba(255,255,255,0.5);
+            flex: 1; 
+            min-width: 150px; /* 極端に狭くなるのを防ぐ */
+            padding: 14px; border: 2px solid rgba(255,255,255,0.5);
             border-radius: 12px; font-size: 1.1rem; box-sizing: border-box;
             text-align: center; background: rgba(255,255,255,0.6); outline: none;
         }
 
-        /* BGMボタンのスタイル */
         .btn-bgm {
-            width: auto; padding: 0 15px; background-color: #666; font-size: 0.9rem;
+            flex: 1; /* スマホで折り返した時に横いっぱいに広がる */
+            min-width: 120px;
+            padding: 14px; background-color: #666; font-size: 0.9rem;
             white-space: nowrap;
+            transition: background-color 0.3s;
         }
         .btn-bgm.on { background-color: var(--success-color); }
 
-        .grid { display: none; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 100%; aspect-ratio: 1 / 1; }
+        .grid { display: none; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 100%; aspect-ratio: 1 / 1; }
         .grid.playing { display: grid; }
 
         .cell {
-            background-color: var(--panel-bg); border-radius: 12px;
+            background-color: var(--panel-bg); border-radius: 10px;
             display: flex; justify-content: center; align-items: center;
             font-size: clamp(1.4rem, 6vw, 2rem); font-weight: bold; color: #444;
             cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             transition: transform 0.1s, opacity 0.3s;
         }
 
-        .cell:active { transform: scale(0.95); }
+        .cell:active { transform: scale(0.9); }
         .cell.correct { opacity: 0; pointer-events: none; transform: scale(1.2); }
         .cell.wrong { background-color: var(--error-color); color: white; animation: shake 0.2s; }
 
@@ -82,9 +93,9 @@
             color: white; font-weight: bold; box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);
         }
 
-        .ranking { width: 100%; background: rgba(255, 255, 255, 0.4); padding: 15px; border-radius: 16px; margin-top: 20px; }
+        .ranking { width: 100%; background: rgba(255, 255, 255, 0.4); padding: 15px; border-radius: 16px; margin-top: 15px; }
         .ranking h3 { margin: 0 0 10px 0; font-size: 1.1rem; color: #444; text-align: center; border-bottom: 2px solid var(--primary-color); padding-bottom: 5px; }
-        .ranking-item { display: flex; justify-content: space-between; padding: 8px 5px; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 1rem; }
+        .ranking-item { display: flex; justify-content: space-between; padding: 8px 5px; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 0.95rem; }
         .r-name { font-weight: bold; color: #333; }
         .r-time { font-family: 'Courier New', Courier, monospace; font-weight: bold; color: #444; }
     </style>
@@ -120,6 +131,7 @@
     import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } 
     from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+    // Firebase設定
     const firebaseConfig = {
         apiKey: "AIzaSyDmERQEIQKssVy12KodGDjwfIDbWcwBOmo",
         authDomain: "speedtouch25-ca738.firebaseapp.com",
@@ -136,28 +148,26 @@
     let nextNum = 1;
     let startTime, timerInterval, isRunning = false;
     let audioCtx = null;
-    let isBgmEnabled = true; // BGMのフラグ
+    let isBgmEnabled = true;
     const bgm = document.getElementById('bgm');
     const bgmBtn = document.getElementById('bgmToggleBtn');
 
     updateRankingDisplay();
     createBoard(true);
 
-    // イベントリスナー
     document.getElementById('startBtn').addEventListener('click', initGame);
     bgmBtn.addEventListener('click', toggleBgm);
 
-    // BGMのON/OFF切り替え関数
     function toggleBgm() {
         isBgmEnabled = !isBgmEnabled;
         if (isBgmEnabled) {
             bgmBtn.textContent = "🔊 BGM: ON";
             bgmBtn.classList.add('on');
-            if (isRunning) bgm.play(); // プレイ中なら即座に鳴らす
+            if (isRunning) bgm.play();
         } else {
             bgmBtn.textContent = "🔇 BGM: OFF";
             bgmBtn.classList.remove('on');
-            bgm.pause(); // 即座に止める
+            bgm.pause();
         }
     }
 
@@ -202,14 +212,11 @@
 
     function initGame() {
         if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-        
-        // BGMフラグが立っている時だけ再生
         if (isBgmEnabled) {
             bgm.currentTime = 0;
-            bgm.volume = 0.3;
+            bgm.volume = 0.5;
             bgm.play().catch(e => console.log("BGM Error"));
         }
-
         clearInterval(timerInterval);
         nextNum = 1;
         document.getElementById('target').textContent = "1";
@@ -229,13 +236,11 @@
         if (num === nextNum) {
             playSound(880, 'sine', 0.1);
             element.classList.add('correct');
-            
             nextNum++;
             if (nextNum > 25) {
                 clearInterval(timerInterval);
                 isRunning = false;
-                bgm.pause(); // クリア時にBGMを止める
-
+                bgm.pause();
                 const time = ((Date.now() - startTime) / 1000).toFixed(3);
                 saveRecord(time);
                 playSound(1046, 'sine', 0.5);
@@ -270,7 +275,7 @@
             const q = query(rankingCol, orderBy("time", "asc"), limit(10));
             const querySnapshot = await getDocs(q);
             if (querySnapshot.empty) {
-                list.innerHTML = '<p style="text-align:center; color:#666; font-size:0.9rem;">No records yet.</p>';
+                list.innerHTML = '<p style="text-align:center; color:#666; font-size:0.8rem;">No records yet.</p>';
                 return;
             }
             let html = "";
