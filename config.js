@@ -1,5 +1,5 @@
     const firebaseConfig = {
-        apiKey: "AIzaSyDmERQEIQKssVy12KodGDjwfIDbWcwBOmo",
+        apiKey: "AIzaSyDmErQEIQKssVy12KodGDjwfIDbWcwBOmo",
         authDomain: "speedtouch25-ca738.firebaseapp.com",
         projectId: "speedtouch25-ca738",
         storageBucket: "speedtouch25-ca738.appspot.com",
