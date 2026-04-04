@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Speed Touch 25 - Mobile Optimized</title>
+    <title>Speed Touch 25 - BGM Default Off</title>
     <style>
         :root {
             --primary-color: #4285f4;
@@ -41,29 +41,32 @@
 
         .setup-area { width: 100%; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
 
-        /* 【修正】モバイルで見切れないように折り返しを許可 */
         .input-group { 
             display: flex; 
             gap: 8px; 
             width: 100%; 
-            flex-wrap: wrap; /* 狭い時に折り返す */
+            flex-wrap: wrap;
         }
 
         input[type="text"] {
             flex: 1; 
-            min-width: 150px; /* 極端に狭くなるのを防ぐ */
+            min-width: 150px;
             padding: 14px; border: 2px solid rgba(255,255,255,0.5);
             border-radius: 12px; font-size: 1.1rem; box-sizing: border-box;
             text-align: center; background: rgba(255,255,255,0.6); outline: none;
         }
 
         .btn-bgm {
-            flex: 1; /* スマホで折り返した時に横いっぱいに広がる */
+            flex: 1;
             min-width: 120px;
             padding: 14px; background-color: #666; font-size: 0.9rem;
+            color: white; border: none; border-radius: 12px;
             white-space: nowrap;
             transition: background-color 0.3s;
+            cursor: pointer;
+            font-weight: bold;
         }
+        /* ONの時だけ緑色にする */
         .btn-bgm.on { background-color: var(--success-color); }
 
         .grid { display: none; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 100%; aspect-ratio: 1 / 1; }
@@ -87,7 +90,7 @@
             75% { transform: translateX(5px); }
         }
 
-        button {
+        .btn-start {
             width: 100%; padding: 16px; font-size: 1.2rem; border: none;
             border-radius: 12px; cursor: pointer; background-color: var(--primary-color);
             color: white; font-weight: bold; box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);
@@ -111,9 +114,9 @@
     <div class="setup-area">
         <div class="input-group">
             <input type="text" id="playerName" placeholder="名前" maxlength="10">
-            <button id="bgmToggleBtn" class="btn-bgm on">🔊 BGM: ON</button>
+            <button id="bgmToggleBtn" class="btn-bgm">🔇 BGM: OFF</button>
         </div>
-        <button id="startBtn">GAME START</button>
+        <button id="startBtn" class="btn-start">GAME START</button>
     </div>
 
     <div class="grid" id="grid"></div>
@@ -131,7 +134,6 @@
     import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } 
     from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // Firebase設定
     const firebaseConfig = {
         apiKey: "AIzaSyDmERQEIQKssVy12KodGDjwfIDbWcwBOmo",
         authDomain: "speedtouch25-ca738.firebaseapp.com",
@@ -148,7 +150,7 @@
     let nextNum = 1;
     let startTime, timerInterval, isRunning = false;
     let audioCtx = null;
-    let isBgmEnabled = true;
+    let isBgmEnabled = false; // デフォルトをOFFに修正
     const bgm = document.getElementById('bgm');
     const bgmBtn = document.getElementById('bgmToggleBtn');
 
@@ -214,7 +216,7 @@
         if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         if (isBgmEnabled) {
             bgm.currentTime = 0;
-            bgm.volume = 0.5;
+            bgm.volume = 0.3;
             bgm.play().catch(e => console.log("BGM Error"));
         }
         clearInterval(timerInterval);
