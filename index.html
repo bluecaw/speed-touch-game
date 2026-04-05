@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Speed Touch 25 - BGM Default Off</title>
+    <title>Speed Touch 25 - Monthly Ranking</title>
     <style>
         :root {
             --primary-color: #4285f4;
@@ -28,79 +28,73 @@
         }
 
         .container {
-            width: 100%; max-width: 500px; padding: 20px 15px; box-sizing: border-box;
+            width: 100%; max-width: 500px; padding: 15px; box-sizing: border-box;
             display: flex; flex-direction: column; align-items: center;
             background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px); border-radius: 24px; margin: 10px 0;
             box-shadow: 0 8px 32px rgba(0,0,0,0.1);
         }
 
-        .info-panel { text-align: center; margin-bottom: 15px; width: 100%; }
-        .timer { font-size: 3.5rem; font-weight: bold; color: #444; font-variant-numeric: tabular-nums; line-height: 1; }
-        .next-number { font-size: 1.4rem; color: var(--primary-color); font-weight: bold; margin-top: 5px; }
+        .info-panel { text-align: center; margin-bottom: 10px; width: 100%; }
+        .timer { font-size: 3rem; font-weight: bold; color: #444; font-variant-numeric: tabular-nums; line-height: 1; }
+        .next-number { font-size: 1.2rem; color: var(--primary-color); font-weight: bold; }
 
-        .setup-area { width: 100%; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-
-        .input-group { 
-            display: flex; 
-            gap: 8px; 
-            width: 100%; 
-            flex-wrap: wrap;
+        /* 自己ベスト表示用 */
+        .personal-best {
+            font-size: 0.9rem; color: #555; background: rgba(255,255,255,0.5);
+            padding: 4px 12px; border-radius: 20px; margin-bottom: 10px; font-weight: bold;
         }
 
+        .setup-area { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+        .input-group { display: flex; gap: 8px; width: 100%; flex-wrap: wrap; }
+
         input[type="text"] {
-            flex: 1; 
-            min-width: 150px;
-            padding: 14px; border: 2px solid rgba(255,255,255,0.5);
-            border-radius: 12px; font-size: 1.1rem; box-sizing: border-box;
-            text-align: center; background: rgba(255,255,255,0.6); outline: none;
+            flex: 1; min-width: 150px; padding: 12px; border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 12px; font-size: 1rem; text-align: center; background: rgba(255,255,255,0.6); outline: none;
         }
 
         .btn-bgm {
-            flex: 1;
-            min-width: 120px;
-            padding: 14px; background-color: #666; font-size: 0.9rem;
-            color: white; border: none; border-radius: 12px;
-            white-space: nowrap;
-            transition: background-color 0.3s;
-            cursor: pointer;
-            font-weight: bold;
+            flex: 1; min-width: 110px; padding: 12px; background-color: #666; font-size: 0.85rem;
+            color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;
         }
-        /* ONの時だけ緑色にする */
         .btn-bgm.on { background-color: var(--success-color); }
 
-        .grid { display: none; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 100%; aspect-ratio: 1 / 1; }
+        .btn-start {
+            width: 100%; padding: 14px; font-size: 1.1rem; border: none;
+            border-radius: 12px; cursor: pointer; background-color: var(--primary-color);
+            color: white; font-weight: bold; box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);
+        }
+
+        .grid { display: none; grid-template-columns: repeat(5, 1fr); gap: 6px; width: 100%; aspect-ratio: 1 / 1; }
         .grid.playing { display: grid; }
 
         .cell {
-            background-color: var(--panel-bg); border-radius: 10px;
+            background-color: var(--panel-bg); border-radius: 8px;
             display: flex; justify-content: center; align-items: center;
-            font-size: clamp(1.4rem, 6vw, 2rem); font-weight: bold; color: #444;
-            cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            font-size: clamp(1.2rem, 5vw, 1.8rem); font-weight: bold; color: #444;
+            cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             transition: transform 0.1s, opacity 0.3s;
         }
-
         .cell:active { transform: scale(0.9); }
         .cell.correct { opacity: 0; pointer-events: none; transform: scale(1.2); }
         .cell.wrong { background-color: var(--error-color); color: white; animation: shake 0.2s; }
 
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
         }
 
-        .btn-start {
-            width: 100%; padding: 16px; font-size: 1.2rem; border: none;
-            border-radius: 12px; cursor: pointer; background-color: var(--primary-color);
-            color: white; font-weight: bold; box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);
+        /* ランキングエリア調整（最大20行） */
+        .ranking { 
+            width: 100%; background: rgba(255, 255, 255, 0.4); padding: 12px; 
+            border-radius: 16px; margin-top: 15px; box-sizing: border-box;
         }
-
-        .ranking { width: 100%; background: rgba(255, 255, 255, 0.4); padding: 15px; border-radius: 16px; margin-top: 15px; }
-        .ranking h3 { margin: 0 0 10px 0; font-size: 1.1rem; color: #444; text-align: center; border-bottom: 2px solid var(--primary-color); padding-bottom: 5px; }
-        .ranking-item { display: flex; justify-content: space-between; padding: 8px 5px; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 0.95rem; }
+        .ranking h3 { margin: 0 0 8px 0; font-size: 1rem; color: #444; text-align: center; border-bottom: 2px solid var(--primary-color); padding-bottom: 4px; }
+        .ranking-list { max-height: 400px; overflow-y: auto; }
+        .ranking-item { display: flex; justify-content: space-between; padding: 6px 4px; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 0.85rem; }
         .r-name { font-weight: bold; color: #333; }
-        .r-time { font-family: 'Courier New', Courier, monospace; font-weight: bold; color: #444; }
+        .r-time { font-family: 'Courier New', monospace; font-weight: bold; color: #444; }
     </style>
 </head>
 <body>
@@ -110,6 +104,8 @@
         <div class="timer" id="timer">0.000</div>
         <div class="next-number">NEXT: <span id="target">1</span></div>
     </div>
+
+    <div class="personal-best" id="personalBest">Personal Best: --.---</div>
 
     <div class="setup-area">
         <div class="input-group">
@@ -122,8 +118,8 @@
     <div class="grid" id="grid"></div>
 
     <div class="ranking">
-        <h3>🏆 WORLD TOP 10</h3>
-        <div id="rankingList">読み込み中...</div>
+        <h3>🏆 THIS MONTH TOP 20</h3>
+        <div id="rankingList" class="ranking-list">読み込み中...</div>
     </div>
 </div>
 
@@ -131,7 +127,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } 
+    import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, where, serverTimestamp } 
     from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const app = initializeApp(firebaseConfig);
@@ -141,10 +137,12 @@
     let nextNum = 1;
     let startTime, timerInterval, isRunning = false;
     let audioCtx = null;
-    let isBgmEnabled = false; // デフォルトをOFFに修正
+    let isBgmEnabled = false;
     const bgm = document.getElementById('bgm');
     const bgmBtn = document.getElementById('bgmToggleBtn');
 
+    // 初期化
+    loadPersonalBest();
     updateRankingDisplay();
     createBoard(true);
 
@@ -153,15 +151,10 @@
 
     function toggleBgm() {
         isBgmEnabled = !isBgmEnabled;
-        if (isBgmEnabled) {
-            bgmBtn.textContent = "🔊 BGM: ON";
-            bgmBtn.classList.add('on');
-            if (isRunning) bgm.play();
-        } else {
-            bgmBtn.textContent = "🔇 BGM: OFF";
-            bgmBtn.classList.remove('on');
-            bgm.pause();
-        }
+        bgmBtn.textContent = isBgmEnabled ? "🔊 BGM: ON" : "🔇 BGM: OFF";
+        bgmBtn.classList.toggle('on', isBgmEnabled);
+        if (!isBgmEnabled) bgm.pause();
+        else if (isRunning) bgm.play();
     }
 
     function playSound(freq, type, duration, vol=0.1) {
@@ -184,16 +177,9 @@
     function createBoard(isPreview = false) {
         const grid = document.getElementById('grid');
         grid.innerHTML = '';
-        if (!isPreview) grid.classList.add('playing');
-        else grid.classList.remove('playing');
-
+        grid.classList.toggle('playing', !isPreview);
         const nums = Array.from({length: 25}, (_, i) => i + 1);
-        if(!isPreview) {
-            for(let i=nums.length-1; i>0; i--){
-                const j = Math.floor(Math.random()*(i+1));
-                [nums[i], nums[j]] = [nums[j], nums[i]];
-            }
-        }
+        if(!isPreview) nums.sort(() => Math.random() - 0.5);
         nums.forEach(num => {
             const cell = document.createElement('div');
             cell.className = 'cell';
@@ -204,12 +190,8 @@
     }
 
     function initGame() {
-        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-        if (isBgmEnabled) {
-            bgm.currentTime = 0;
-            bgm.volume = 0.3;
-            bgm.play().catch(e => console.log("BGM Error"));
-        }
+        if (audioCtx?.state === 'suspended') audioCtx.resume();
+        if (isBgmEnabled) { bgm.currentTime = 0; bgm.volume = 0.5; bgm.play().catch(()=>{}); }
         clearInterval(timerInterval);
         nextNum = 1;
         document.getElementById('target').textContent = "1";
@@ -223,20 +205,12 @@
     }
 
     function handleTouch(num, element) {
-        if (!isRunning) return;
-        if (element.classList.contains('correct')) return;
-
+        if (!isRunning || element.classList.contains('correct')) return;
         if (num === nextNum) {
             playSound(880, 'sine', 0.1);
             element.classList.add('correct');
-            nextNum++;
-            if (nextNum > 25) {
-                clearInterval(timerInterval);
-                isRunning = false;
-                bgm.pause();
-                const time = ((Date.now() - startTime) / 1000).toFixed(3);
-                saveRecord(time);
-                playSound(1046, 'sine', 0.5);
+            if (++nextNum > 25) {
+                finishGame();
             } else {
                 document.getElementById('target').textContent = nextNum;
             }
@@ -244,6 +218,30 @@
             playSound(150, 'sawtooth', 0.2, 0.05);
             element.classList.add('wrong');
             setTimeout(() => element.classList.remove('wrong'), 200);
+        }
+    }
+
+    function finishGame() {
+        clearInterval(timerInterval);
+        isRunning = false;
+        bgm.pause();
+        const time = ((Date.now() - startTime) / 1000).toFixed(3);
+        savePersonalBest(time);
+        saveRecord(time);
+        playSound(1046, 'sine', 0.5);
+    }
+
+    // 自己ベストの管理（LocalStorage）
+    function loadPersonalBest() {
+        const best = localStorage.getItem('speedTouchBest');
+        document.getElementById('personalBest').textContent = best ? `Personal Best: ${best}s` : `Personal Best: --.---`;
+    }
+
+    function savePersonalBest(newTime) {
+        const currentBest = localStorage.getItem('speedTouchBest');
+        if (!currentBest || parseFloat(newTime) < parseFloat(currentBest)) {
+            localStorage.setItem('speedTouchBest', newTime);
+            loadPersonalBest();
         }
     }
 
@@ -257,24 +255,36 @@
             });
             updateRankingDisplay();
             setTimeout(() => alert(`FINISH!\nTime: ${time}s`), 100);
-        } catch (e) {
-            console.error("Firebase Save Error:", e);
-        }
+        } catch (e) { console.error(e); }
     }
 
     async function updateRankingDisplay() {
         const list = document.getElementById('rankingList');
+        // 月次リセット：今月の1日の 00:00:00 を取得
+        const now = new Date();
+        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
         try {
-            const q = query(rankingCol, orderBy("time", "asc"), limit(10));
+            const q = query(
+                rankingCol, 
+                where("createdAt", ">=", firstDayOfMonth), // 今月のデータのみ
+                orderBy("createdAt", "desc"), // インデックスエラー回避用（複合インデックス未作成の場合に必要になることがあります）
+                orderBy("time", "asc"), 
+                limit(20) // 20件表示
+            );
+            
+            // 注意: Firestoreで where と orderBy を組み合わせる場合、Firebaseコンソールで「複合インデックス」の作成が必要になる場合があります。
+            // もしエラーが出る場合は、一旦 where を外すか、エラーログのリンクからインデックスを作成してください。
+            
             const querySnapshot = await getDocs(q);
             if (querySnapshot.empty) {
-                list.innerHTML = '<p style="text-align:center; color:#666; font-size:0.8rem;">No records yet.</p>';
+                list.innerHTML = '<p style="text-align:center; font-size:0.8rem;">No records this month.</p>';
                 return;
             }
             let html = "";
             let i = 1;
-            querySnapshot.forEach((docSnap) => {
-                const r = docSnap.data();
+            querySnapshot.forEach((doc) => {
+                const r = doc.data();
                 html += `
                     <div class="ranking-item">
                         <span>${i}. <span class="r-name">${escapeHtml(r.name)}</span></span>
@@ -284,9 +294,7 @@
                 i++;
             });
             list.innerHTML = html;
-        } catch (e) {
-            console.error("Firebase Load Error:", e);
-        }
+        } catch (e) { console.error("Ranking Error:", e); }
     }
 
     function escapeHtml(str) {
