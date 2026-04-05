@@ -268,7 +268,6 @@
             const q = query(
                 rankingCol, 
                 where("createdAt", ">=", firstDayOfMonth), // 今月のデータのみ
-                orderBy("createdAt", "desc"), // インデックスエラー回避用（複合インデックス未作成の場合に必要になることがあります）
                 orderBy("time", "asc"), 
                 limit(20) // 20件表示
             );
