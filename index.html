@@ -285,7 +285,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, where, serverTimestamp }
             from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-            
+
         // --- 2. ログイン用の関数 ---
         function login() {
             const email = prompt("ID（メールアドレス）を入力してください:");
@@ -491,7 +491,7 @@
             console.log("ゲームロジック起動");
         }
     </script>
-    <script src="./config.js"></script>
+    <script type="module" src="./config.js"></script>
 </body>
 
 </html>
