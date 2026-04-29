@@ -397,17 +397,18 @@
             async function updateRankingDisplay() {
                 const list = document.getElementById('rankingList');
                 const now = new Date();
+                // 今月1日の0時0分を取得
                 const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
 
                 try {
-                    // 作成されたインデックスに合わせて orderBy を設定します
-                    // time (↑), createdAt (↑) の順番で並べる形式にします
+                    // 【重要】Firebaseの制約：whereで指定したフィールド(createdAt)を
+                    // orderByの第一引数にする必要があります。
                     const q = query(
                         rankingCol,
                         where("createdAt", ">=", firstDay),
-                        orderBy("time", "asc"),      // インデックスの ↑time に対応
-                        orderBy("createdAt", "asc"), // インデックスの ↑createdAt に対応
-                        limit(20)
+                        orderBy("createdAt", "asc"),
+                        orderBy("time", "asc"),
+                        limit(50)
                     );
 
                     const querySnapshot = await getDocs(q);
@@ -422,8 +423,12 @@
                         return;
                     }
 
-                    // 表示の生成
-                    list.innerHTML = data.map((r, i) => `
+                    // 取得した「今月のデータ」を、JavaScript側でタイムが早い順に並べ替える
+                    // (Firestoreの制限を回避しつつ、正確なランキングを出すための手法です)
+                    data.sort((a, b) => a.time - b.time);
+
+                    // 上位20件を表示
+                    list.innerHTML = data.slice(0, 20).map((r, i) => `
             <div class="ranking-item">
                 <span>${i + 1}. <span class="r-name">${escapeHtml(r.name)}</span></span>
                 <span class="r-time">${Number(r.time).toFixed(3)}s</span>
@@ -432,8 +437,8 @@
 
                 } catch (e) {
                     console.error("ランキング表示エラー:", e);
-                    // モバイルでまだ表示されない場合は、以下のコメントアウトを外してエラーを確認してください
-                    // list.innerHTML = `<p style="color:red; font-size:0.5rem;">${e.message}</p>`;
+                    // モバイルで原因を特定するためのデバッグ表示（確認できたら消してOK）
+                    list.innerHTML = `<p style="color:red; font-size:0.5rem;">Error: ${e.code}</p>`;
                 }
             }
 
