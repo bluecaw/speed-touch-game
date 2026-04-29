@@ -337,35 +337,37 @@
             bgmBtn.onclick = toggleBgm;
 
             // --- ランキング表示 (モバイル・インデックス対応版) ---
+            // --- ランキング表示 (モバイル・インデックス対応決定版) ---
             async function updateRankingDisplay() {
                 const list = document.getElementById('rankingList');
                 const now = new Date();
-                // 今月1日の0時0分
                 const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
 
                 try {
-                    // 1. まず「今月分」のデータを取得する
-                    // インデックス (createdAt ↑, time ↑) に100%一致させる
+                    // 1. 今月のデータを取得（インデックス：createdAt ↑, time ↑ に対応）
+                    // ※ orderBy("time") を先に書くとインデックスエラーになるため、
+                    //    まずは createdAt で絞り込みと並べ替えを行います。
                     const q = query(
                         rankingCol,
                         where("createdAt", ">=", firstDay),
                         orderBy("createdAt", "asc"),
-                        orderBy("time", "asc"),
-                        limit(100) // 多めに取得して漏れを防ぐ
+                        limit(100) // 漏れを防ぐため多めに取得
                     );
 
                     const snap = await getDocs(q);
                     let data = [];
+
                     snap.forEach(doc => {
                         const d = doc.data();
-                        // タイムが数値であることを確実にする
+                        // 数値として扱えるよう parseFloat を徹底
                         data.push({
                             ...d,
-                            time: parseFloat(d.time)
+                            time: parseFloat(d.time) || 999.999 // 万が一データが不正な場合のフォールバック
                         });
                     });
 
-                    // 2. JavaScript側で「タイムが早い順」に強制ソート
+                    // 2. 【重要】取得したデータを JavaScript 側で「タイムの早い順」に強制ソート
+                    // これにより、Firestore側のインデックス制約に縛られずに正確なランキングが出せます。
                     data.sort((a, b) => a.time - b.time);
 
                     if (data.length === 0) {
@@ -373,7 +375,7 @@
                         return;
                     }
 
-                    // 3. 上位20件を表示
+                    // 3. 上位20件を表示（.slice(0, 20)）
                     list.innerHTML = data.slice(0, 20).map((r, i) => `
             <div class="ranking-item">
                 <span>${i + 1}. <span class="r-name">${escapeHtml(r.name)}</span></span>
@@ -382,7 +384,7 @@
 
                 } catch (e) {
                     console.error("Ranking Error:", e);
-                    // モバイルでエラーが見えるようにする
+                    // モバイルでエラーコード（PERMISSION_DENIED や FAILED_PRECONDITION 等）を確認できるようにします
                     list.innerHTML = `<p style="color:red; font-size:0.5rem;">Err: ${e.code || e.message}</p>`;
                 }
             }
