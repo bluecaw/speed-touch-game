@@ -279,8 +279,8 @@
     <audio id="bgm" src="chopin.mp3" loop></audio>
 
     <script type="module">
-        // 1. script.js から db と auth を読み込む
-        import { db, auth } from './script.js';
+        // 1. config.js から db と auth を読み込む
+        import { db, auth } from './config.js';
         import { signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, where, serverTimestamp }
