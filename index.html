@@ -253,214 +253,219 @@
 
     <audio id="bgm" src="chopin.mp3" loop></audio>
 
-    <script type="module">
-        import { db, auth } from './config.js';
-        import { signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { collection, addDoc, getDocs, query, orderBy, limit, where, serverTimestamp } 
-            from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+<script type="module">
+    import { db, auth } from './config.js';
+    import { signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { collection, addDoc, getDocs, query, orderBy, limit, where, serverTimestamp } 
+        from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // --- ログイン処理 ---
-        function login() {
-            const email = prompt("ID（メールアドレス）を入力してください:");
-            const password = prompt("パスワードを入力してください:");
+    // --- ログイン処理 ---
+    function login() {
+        const email = prompt("ID（メールアドレス）を入力してください:");
+        const password = prompt("パスワードを入力してください:");
 
-            if (email && password) {
-                signInWithEmailAndPassword(auth, email, password)
-                    .catch((error) => {
-                        console.error("Auth Error:", error.code);
-                        alert("ログインに失敗しました。正しい情報を入力してください。");
-                        login();
-                    });
-            } else {
-                login();
-            }
-        }
-
-        // --- 認証状態の監視 ---
-        onAuthStateChanged(auth, (user) => {
-            const startBtn = document.getElementById('startBtn');
-            if (user) {
-                console.log("ログイン中:", user.email);
-                startBtn.disabled = false;
-                startBtn.textContent = "GAME START";
-                // ログインして初めて「初期化」を行う
-                initSystem();
-            } else {
-                startBtn.disabled = true;
-                startBtn.textContent = "認証が必要です";
-                login();
-            }
-        });
-
-        // --- システム全体の初期化（認証後のみ実行） ---
-        function initSystem() {
-            const rankingCol = collection(db, "rankings");
-            let nextNum = 1;
-            let startTime, timerInterval, isRunning = false;
-            let audioCtx = null;
-            let isBgmEnabled = false;
-            const bgm = document.getElementById('bgm');
-            const bgmBtn = document.getElementById('bgmToggleBtn');
-
-            // 1. 各種表示の初期化
-            loadPersonalBest();
-            updateRankingDisplay();
-            createBoard(true);
-
-            // 2. イベントリスナーの登録（ここに書くことで二重実行を防ぐ）
-            document.getElementById('startBtn').onclick = startGame;
-            bgmBtn.onclick = toggleBgm;
-
-            function toggleBgm() {
-                isBgmEnabled = !isBgmEnabled;
-                bgmBtn.textContent = isBgmEnabled ? "🔊 BGM: ON" : "🔇 BGM: OFF";
-                bgmBtn.classList.toggle('on', isBgmEnabled);
-                if (!isBgmEnabled) bgm.pause();
-                else if (isRunning) bgm.play();
-            }
-
-            function playSound(freq, type, duration, vol = 0.1) {
-                try {
-                    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    if (audioCtx.state === 'suspended') audioCtx.resume();
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = type;
-                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                    gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + duration);
-                } catch (e) { }
-            }
-
-            function createBoard(isPreview = false) {
-                const grid = document.getElementById('grid');
-                grid.innerHTML = '';
-                grid.classList.toggle('playing', !isPreview);
-                const nums = Array.from({ length: 25 }, (_, i) => i + 1);
-                if (!isPreview) nums.sort(() => Math.random() - 0.5);
-                nums.forEach(num => {
-                    const cell = document.createElement('div');
-                    cell.className = 'cell';
-                    cell.innerHTML = `<span>${num}</span>`;
-                    cell.onclick = () => handleTouch(num, cell);
-                    grid.appendChild(cell);
+        if (email && password) {
+            signInWithEmailAndPassword(auth, email, password)
+                .catch((error) => {
+                    console.error("Auth Error:", error.code);
+                    alert("ログインに失敗しました。");
+                    login();
                 });
-            }
+        } else {
+            login();
+        }
+    }
 
-            function startGame() {
-                if (audioCtx?.state === 'suspended') audioCtx.resume();
-                if (isBgmEnabled) { bgm.currentTime = 0; bgm.volume = 0.5; bgm.play().catch(() => { }); }
-                
-                clearInterval(timerInterval);
-                nextNum = 1;
-                document.getElementById('target').textContent = "1";
-                document.getElementById('timer').textContent = "0.000";
-                createBoard(false);
-                isRunning = true;
-                startTime = Date.now();
-                timerInterval = setInterval(() => {
-                    document.getElementById('timer').textContent = ((Date.now() - startTime) / 1000).toFixed(3);
-                }, 47);
-            }
+    // --- 認証状態の監視 ---
+    onAuthStateChanged(auth, (user) => {
+        const startBtn = document.getElementById('startBtn');
+        if (user) {
+            console.log("ログイン成功:", user.email);
+            startBtn.disabled = false;
+            startBtn.textContent = "GAME START";
+            // システムを起動
+            setupSystem();
+        } else {
+            startBtn.disabled = true;
+            startBtn.textContent = "認証が必要です";
+            login();
+        }
+    });
 
-            function handleTouch(num, element) {
-                if (!isRunning || element.classList.contains('correct')) return;
-                if (num === nextNum) {
-                    playSound(880, 'sine', 0.1);
-                    element.classList.add('correct');
-                    if (++nextNum > 25) {
-                        finishGame();
-                    } else {
-                        document.getElementById('target').textContent = nextNum;
-                    }
+    // --- システム全体のセットアップ ---
+    function setupSystem() {
+        const rankingCol = collection(db, "rankings");
+        let nextNum = 1;
+        let startTime, timerInterval, isRunning = false;
+        let audioCtx = null;
+        let isBgmEnabled = false;
+        const bgm = document.getElementById('bgm');
+        const bgmBtn = document.getElementById('bgmToggleBtn');
+
+        // 表示の初期化
+        loadPersonalBest();
+        updateRankingDisplay();
+        createBoard(true);
+
+        // ボタンイベントの紐付け
+        document.getElementById('startBtn').onclick = startGame;
+        bgmBtn.onclick = toggleBgm;
+
+        function toggleBgm() {
+            isBgmEnabled = !isBgmEnabled;
+            bgmBtn.textContent = isBgmEnabled ? "🔊 BGM: ON" : "🔇 BGM: OFF";
+            bgmBtn.classList.toggle('on', isBgmEnabled);
+            if (!isBgmEnabled) bgm.pause();
+            else if (isRunning) bgm.play();
+        }
+
+        function playSound(freq, type, duration, vol = 0.1) {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) { }
+        }
+
+        function createBoard(isPreview = false) {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            grid.classList.toggle('playing', !isPreview);
+            const nums = Array.from({ length: 25 }, (_, i) => i + 1);
+            if (!isPreview) nums.sort(() => Math.random() - 0.5);
+            nums.forEach(num => {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.innerHTML = `<span>${num}</span>`;
+                cell.onclick = () => handleTouch(num, cell);
+                grid.appendChild(cell);
+            });
+        }
+
+        function startGame() {
+            console.log("Game Starting...");
+            if (audioCtx?.state === 'suspended') audioCtx.resume();
+            if (isBgmEnabled) { bgm.currentTime = 0; bgm.volume = 0.5; bgm.play().catch(() => { }); }
+            
+            clearInterval(timerInterval);
+            nextNum = 1;
+            document.getElementById('target').textContent = "1";
+            document.getElementById('timer').textContent = "0.000";
+            createBoard(false);
+            isRunning = true;
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                document.getElementById('timer').textContent = ((Date.now() - startTime) / 1000).toFixed(3);
+            }, 47);
+        }
+
+        function handleTouch(num, element) {
+            if (!isRunning || element.classList.contains('correct')) return;
+            if (num === nextNum) {
+                playSound(880, 'sine', 0.1);
+                element.classList.add('correct');
+                if (++nextNum > 25) {
+                    finishGame();
                 } else {
-                    playSound(150, 'sawtooth', 0.2, 0.05);
-                    element.classList.add('wrong');
-                    setTimeout(() => element.classList.remove('wrong'), 200);
+                    document.getElementById('target').textContent = nextNum;
                 }
-            }
-
-            function finishGame() {
-                clearInterval(timerInterval);
-                isRunning = false;
-                bgm.pause();
-                const time = ((Date.now() - startTime) / 1000).toFixed(3);
-                savePersonalBest(time);
-                saveRecord(time);
-                playSound(1046, 'sine', 0.5);
-            }
-
-            function loadPersonalBest() {
-                const best = localStorage.getItem('speedTouchBest');
-                document.getElementById('personalBest').textContent = best ? `Personal Best: ${best}s` : `Personal Best: --.---`;
-            }
-
-            function savePersonalBest(newTime) {
-                const currentBest = localStorage.getItem('speedTouchBest');
-                if (!currentBest || parseFloat(newTime) < parseFloat(currentBest)) {
-                    localStorage.setItem('speedTouchBest', newTime);
-                    loadPersonalBest();
-                }
-            }
-
-            async function saveRecord(time) {
-                const name = document.getElementById('playerName').value.trim() || 'Guest';
-                try {
-                    await addDoc(rankingCol, {
-                        name: name,
-                        time: parseFloat(time),
-                        createdAt: serverTimestamp()
-                    });
-                    updateRankingDisplay();
-                    setTimeout(() => alert(`FINISH!\nTime: ${time}s`), 100);
-                } catch (e) { console.error(e); }
-            }
-
-            async function updateRankingDisplay() {
-                const list = document.getElementById('rankingList');
-                const now = new Date();
-                const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-                try {
-                    const q = query(
-                        rankingCol,
-                        where("createdAt", ">=", firstDayOfMonth),
-                        orderBy("createdAt", "desc"), // 複合インデックスエラーを避けるため一旦作成日に
-                        limit(20)
-                    );
-
-                    const querySnapshot = await getDocs(q);
-                    if (querySnapshot.empty) {
-                        list.innerHTML = '<p style="text-align:center; font-size:0.8rem;">No records this month.</p>';
-                        return;
-                    }
-
-                    // クライアント側でソート（インデックス作成の手間を省くため）
-                    let data = [];
-                    querySnapshot.forEach(doc => data.push(doc.data()));
-                    data.sort((a, b) => a.time - b.time);
-
-                    let html = "";
-                    data.forEach((r, i) => {
-                        html += `
-                            <div class="ranking-item">
-                                <span>${i + 1}. <span class="r-name">${escapeHtml(r.name)}</span></span>
-                                <span class="r-time">${Number(r.time).toFixed(3)}s</span>
-                            </div>
-                        `;
-                    });
-                    list.innerHTML = html;
-                } catch (e) { console.error("Ranking Error:", e); }
-            }
-
-            function escapeHtml(str) {
-                return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+            } else {
+                playSound(150, 'sawtooth', 0.2, 0.05);
+                element.classList.add('wrong');
+                setTimeout(() => element.classList.remove('wrong'), 200);
             }
         }
-    </script>
+
+        function finishGame() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            bgm.pause();
+            const time = ((Date.now() - startTime) / 1000).toFixed(3);
+            savePersonalBest(time);
+            saveRecord(time);
+            playSound(1046, 'sine', 0.5);
+        }
+
+        function loadPersonalBest() {
+            const best = localStorage.getItem('speedTouchBest');
+            document.getElementById('personalBest').textContent = best ? `Personal Best: ${best}s` : `Personal Best: --.---`;
+        }
+
+        function savePersonalBest(newTime) {
+            const currentBest = localStorage.getItem('speedTouchBest');
+            if (!currentBest || parseFloat(newTime) < parseFloat(currentBest)) {
+                localStorage.setItem('speedTouchBest', newTime);
+                loadPersonalBest();
+            }
+        }
+
+        async function saveRecord(time) {
+            const name = document.getElementById('playerName').value.trim() || 'Guest';
+            try {
+                await addDoc(rankingCol, {
+                    name: name,
+                    time: parseFloat(time),
+                    createdAt: serverTimestamp()
+                });
+                updateRankingDisplay();
+                setTimeout(() => alert(`FINISH!\nTime: ${time}s`), 100);
+            } catch (e) { console.error("Save Error:", e); }
+        }
+
+        async function updateRankingDisplay() {
+            const list = document.getElementById('rankingList');
+            const now = new Date();
+            const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+            try {
+                // インデックスエラー回避のため、条件をシンプルに取得
+                const q = query(
+                    rankingCol,
+                    where("createdAt", ">=", firstDayOfMonth),
+                    limit(50) 
+                );
+
+                const querySnapshot = await getDocs(q);
+                if (querySnapshot.empty) {
+                    list.innerHTML = '<p style="text-align:center; font-size:0.8rem;">No records this month.</p>';
+                    return;
+                }
+
+                // JS側でソート
+                let data = [];
+                querySnapshot.forEach(doc => data.push(doc.data()));
+                data.sort((a, b) => a.time - b.time);
+
+                let html = "";
+                data.slice(0, 20).forEach((r, i) => {
+                    html += `
+                        <div class="ranking-item">
+                            <span>${i + 1}. <span class="r-name">${escapeHtml(r.name)}</span></span>
+                            <span class="r-time">${Number(r.time).toFixed(3)}s</span>
+                        </div>
+                    `;
+                });
+                list.innerHTML = html;
+            } catch (e) { 
+                console.error("Ranking Display Error:", e);
+                list.innerHTML = "ランキングの取得に失敗しました。";
+            }
+        }
+
+        function escapeHtml(str) {
+            if(!str) return "";
+            return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+        }
+    }
+</script>
 </body>
 </html>
