@@ -19,4 +19,6 @@ const db = getFirestore(app);
 const auth = getAuth(app); // 2. authを初期化
 
 // index.html側でこれらを使えるようにエクスポートしておく
-export { db, auth };
+// config.js の最後の方
+export const auth = getAuth(app);
+export const db = getFirestore(app); // ここが db になっているか確認
