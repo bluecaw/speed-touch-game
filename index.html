@@ -30,17 +30,9 @@
         }
 
         @keyframes rainbowBG {
-            0% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
-
-            100% {
-                background-position: 0% 50%;
-            }
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         .container {
@@ -79,7 +71,6 @@
             font-weight: bold;
         }
 
-        /* 自己ベスト表示用 */
         .personal-best {
             font-size: 0.9rem;
             color: #555;
@@ -147,6 +138,13 @@
             box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);
         }
 
+        /* ログイン前のボタン無効化スタイル */
+        .btn-start:disabled {
+            background-color: #999;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
         .grid {
             display: none;
             grid-template-columns: repeat(5, 1fr);
@@ -173,10 +171,7 @@
             transition: transform 0.1s, opacity 0.3s;
         }
 
-        .cell:active {
-            transform: scale(0.9);
-        }
-
+        .cell:active { transform: scale(0.9); }
         .cell.correct {
             opacity: 0;
             pointer-events: none;
@@ -190,22 +185,11 @@
         }
 
         @keyframes shake {
-
-            0%,
-            100% {
-                transform: translateX(0);
-            }
-
-            25% {
-                transform: translateX(-4px);
-            }
-
-            75% {
-                transform: translateX(4px);
-            }
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
         }
 
-        /* ランキングエリア調整（最大20行） */
         .ranking {
             width: 100%;
             background: rgba(255, 255, 255, 0.4);
@@ -237,21 +221,12 @@
             font-size: 0.85rem;
         }
 
-        .r-name {
-            font-weight: bold;
-            color: #333;
-        }
-
-        .r-time {
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-            color: #444;
-        }
+        .r-name { font-weight: bold; color: #333; }
+        .r-time { font-family: 'Courier New', monospace; font-weight: bold; color: #444; }
     </style>
 </head>
 
 <body>
-
     <div class="container">
         <div class="info-panel">
             <div class="timer" id="timer">0.000</div>
@@ -265,7 +240,7 @@
                 <input type="text" id="playerName" placeholder="名前" maxlength="10">
                 <button id="bgmToggleBtn" class="btn-bgm">🔇 BGM: OFF</button>
             </div>
-            <button id="startBtn" class="btn-start">GAME START</button>
+            <button id="startBtn" class="btn-start" disabled>認証待機中...</button>
         </div>
 
         <div class="grid" id="grid"></div>
@@ -279,54 +254,47 @@
     <audio id="bgm" src="chopin.mp3" loop></audio>
 
     <script type="module">
-        // 1. config.js から db と auth を読み込む
         import { db, auth } from './config.js';
-        import { signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, where, serverTimestamp }
+        import { signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { collection, addDoc, getDocs, query, orderBy, limit, where, serverTimestamp } 
             from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // --- 2. ログイン用の関数 ---
+        // --- ログイン処理 ---
         function login() {
             const email = prompt("ID（メールアドレス）を入力してください:");
             const password = prompt("パスワードを入力してください:");
 
             if (email && password) {
                 signInWithEmailAndPassword(auth, email, password)
-                    .then(() => {
-                        alert("ログイン成功！");
-                    })
                     .catch((error) => {
-                        console.error("Firebase Auth Error:", error.code, error.message);
-                        // APIキーの制限エラー(403)などの場合、ここでalertを出すとループを止められます
-                        alert("ログインできませんでした: " + error.message);
-                        // 少し待ってから再入力させるか、ボタンを押させる形にするのが理想です
-                        setTimeout(login, 1000);
+                        console.error("Auth Error:", error.code);
+                        alert("ログインに失敗しました。正しい情報を入力してください。");
+                        login();
                     });
+            } else {
+                login();
             }
         }
 
-        // --- 3. 認証状態の監視 ---
+        // --- 認証状態の監視 ---
         onAuthStateChanged(auth, (user) => {
+            const startBtn = document.getElementById('startBtn');
             if (user) {
-                console.log("ログイン成功:", user.email);
-                initGame(); // ログインしたらゲーム開始
+                console.log("ログイン中:", user.email);
+                startBtn.disabled = false;
+                startBtn.textContent = "GAME START";
+                // ログインして初めて「初期化」を行う
+                initSystem();
             } else {
-                login(); // 未ログインならポップアップ
+                startBtn.disabled = true;
+                startBtn.textContent = "認証が必要です";
+                login();
             }
         });
 
-        // --- 4. メインロジックをこの関数の中にまとめる ---
-        function initGame() {
-            /* ここに、元々 index.html に直書きされていた
-               タイピング判定、タイマー、Firestoreからのデータ取得などの
-               コードをすべて移動させます。
-            */
-
-            const app = initializeApp(firebaseConfig);
-            const db = getFirestore(app);
+        // --- システム全体の初期化（認証後のみ実行） ---
+        function initSystem() {
             const rankingCol = collection(db, "rankings");
-
             let nextNum = 1;
             let startTime, timerInterval, isRunning = false;
             let audioCtx = null;
@@ -334,13 +302,14 @@
             const bgm = document.getElementById('bgm');
             const bgmBtn = document.getElementById('bgmToggleBtn');
 
-            // 初期化
+            // 1. 各種表示の初期化
             loadPersonalBest();
             updateRankingDisplay();
             createBoard(true);
 
-            document.getElementById('startBtn').addEventListener('click', initGame);
-            bgmBtn.addEventListener('click', toggleBgm);
+            // 2. イベントリスナーの登録（ここに書くことで二重実行を防ぐ）
+            document.getElementById('startBtn').onclick = startGame;
+            bgmBtn.onclick = toggleBgm;
 
             function toggleBgm() {
                 isBgmEnabled = !isBgmEnabled;
@@ -382,9 +351,10 @@
                 });
             }
 
-            function initGame() {
+            function startGame() {
                 if (audioCtx?.state === 'suspended') audioCtx.resume();
                 if (isBgmEnabled) { bgm.currentTime = 0; bgm.volume = 0.5; bgm.play().catch(() => { }); }
+                
                 clearInterval(timerInterval);
                 nextNum = 1;
                 document.getElementById('target').textContent = "1";
@@ -424,7 +394,6 @@
                 playSound(1046, 'sine', 0.5);
             }
 
-            // 自己ベストの管理（LocalStorage）
             function loadPersonalBest() {
                 const best = localStorage.getItem('speedTouchBest');
                 document.getElementById('personalBest').textContent = best ? `Personal Best: ${best}s` : `Personal Best: --.---`;
@@ -453,37 +422,36 @@
 
             async function updateRankingDisplay() {
                 const list = document.getElementById('rankingList');
-                // 月次リセット：今月の1日の 00:00:00 を取得
                 const now = new Date();
                 const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
                 try {
                     const q = query(
                         rankingCol,
-                        where("createdAt", ">=", firstDayOfMonth), // 今月のデータのみ
-                        orderBy("time", "asc"),
-                        limit(20) // 20件表示
+                        where("createdAt", ">=", firstDayOfMonth),
+                        orderBy("createdAt", "desc"), // 複合インデックスエラーを避けるため一旦作成日に
+                        limit(20)
                     );
-
-                    // 注意: Firestoreで where と orderBy を組み合わせる場合、Firebaseコンソールで「複合インデックス」の作成が必要になる場合があります。
-                    // もしエラーが出る場合は、一旦 where を外すか、エラーログのリンクからインデックスを作成してください。
 
                     const querySnapshot = await getDocs(q);
                     if (querySnapshot.empty) {
                         list.innerHTML = '<p style="text-align:center; font-size:0.8rem;">No records this month.</p>';
                         return;
                     }
+
+                    // クライアント側でソート（インデックス作成の手間を省くため）
+                    let data = [];
+                    querySnapshot.forEach(doc => data.push(doc.data()));
+                    data.sort((a, b) => a.time - b.time);
+
                     let html = "";
-                    let i = 1;
-                    querySnapshot.forEach((doc) => {
-                        const r = doc.data();
+                    data.forEach((r, i) => {
                         html += `
-                    <div class="ranking-item">
-                        <span>${i}. <span class="r-name">${escapeHtml(r.name)}</span></span>
-                        <span class="r-time">${Number(r.time).toFixed(3)}s</span>
-                    </div>
-                `;
-                        i++;
+                            <div class="ranking-item">
+                                <span>${i + 1}. <span class="r-name">${escapeHtml(r.name)}</span></span>
+                                <span class="r-time">${Number(r.time).toFixed(3)}s</span>
+                            </div>
+                        `;
                     });
                     list.innerHTML = html;
                 } catch (e) { console.error("Ranking Error:", e); }
@@ -492,10 +460,7 @@
             function escapeHtml(str) {
                 return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
             }
-            console.log("ゲームロジック起動");
         }
     </script>
-    <script type="module" src="./config.js"></script>
 </body>
-
 </html>
