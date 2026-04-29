@@ -13,7 +13,8 @@
             --panel-bg: rgba(255, 255, 255, 0.85);
         }
 
-        html, body {
+        html,
+        body {
             margin: 0;
             padding: 0;
             width: 100%;
@@ -29,9 +30,17 @@
         }
 
         @keyframes rainbowBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
         .container {
@@ -50,38 +59,198 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
-        .info-panel { text-align: center; margin-bottom: 10px; width: 100%; }
-        .timer { font-size: 3rem; font-weight: bold; color: #444; font-variant-numeric: tabular-nums; line-height: 1; }
-        .next-number { font-size: 1.2rem; color: var(--primary-color); font-weight: bold; }
-        .personal-best { font-size: 0.9rem; color: #555; background: rgba(255, 255, 255, 0.5); padding: 4px 12px; border-radius: 20px; margin-bottom: 10px; font-weight: bold; }
-
-        .setup-area { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
-        .input-group { display: flex; gap: 8px; width: 100%; flex-wrap: wrap; }
-        input[type="text"] { flex: 1; min-width: 150px; padding: 12px; border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 12px; font-size: 1rem; text-align: center; background: rgba(255, 255, 255, 0.6); outline: none; }
-        .btn-bgm { flex: 1; min-width: 110px; padding: 12px; background-color: #666; font-size: 0.85rem; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
-        .btn-bgm.on { background-color: var(--success-color); }
-        .btn-start { width: 100%; padding: 14px; font-size: 1.1rem; border: none; border-radius: 12px; cursor: pointer; background-color: var(--primary-color); color: white; font-weight: bold; box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3); }
-        .btn-start:disabled { background-color: #999; cursor: not-allowed; box-shadow: none; }
-
-        .grid { display: none; grid-template-columns: repeat(5, 1fr); gap: 6px; width: 100%; aspect-ratio: 1 / 1; }
-        .grid.playing { display: grid; }
-        .cell { background-color: var(--panel-bg); border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: clamp(1.2rem, 5vw, 1.8rem); font-weight: bold; color: #444; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); transition: transform 0.1s, opacity 0.3s; }
-        .cell:active { transform: scale(0.9); }
-        .cell.correct { opacity: 0; pointer-events: none; transform: scale(1.2); }
-        .cell.wrong { background-color: var(--error-color); color: white; animation: shake 0.2s; }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-4px); }
-            75% { transform: translateX(4px); }
+        .info-panel {
+            text-align: center;
+            margin-bottom: 10px;
+            width: 100%;
         }
 
-        .ranking { width: 100%; background: rgba(255, 255, 255, 0.4); padding: 12px; border-radius: 16px; margin-top: 15px; box-sizing: border-box; }
-        .ranking h3 { margin: 0 0 8px 0; font-size: 1rem; color: #444; text-align: center; border-bottom: 2px solid var(--primary-color); padding-bottom: 4px; }
-        .ranking-list { max-height: 400px; overflow-y: auto; }
-        .ranking-item { display: flex; justify-content: space-between; padding: 6px 4px; border-bottom: 1px solid rgba(0, 0, 0, 0.05); font-size: 0.85rem; }
-        .r-name { font-weight: bold; color: #333; }
-        .r-time { font-family: 'Courier New', monospace; font-weight: bold; color: #444; }
+        .timer {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #444;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+        }
+
+        .next-number {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .personal-best {
+            font-size: 0.9rem;
+            color: #555;
+            background: rgba(255, 255, 255, 0.5);
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .setup-area {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            font-size: 1rem;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.6);
+            outline: none;
+        }
+
+        .btn-bgm {
+            flex: 1;
+            min-width: 110px;
+            padding: 12px;
+            background-color: #666;
+            font-size: 0.85rem;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-bgm.on {
+            background-color: var(--success-color);
+        }
+
+        .btn-start {
+            width: 100%;
+            padding: 14px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);
+        }
+
+        .btn-start:disabled {
+            background-color: #999;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .grid {
+            display: none;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+        }
+
+        .grid.playing {
+            display: grid;
+        }
+
+        .cell {
+            background-color: var(--panel-bg);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(1.2rem, 5vw, 1.8rem);
+            font-weight: bold;
+            color: #444;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.1s, opacity 0.3s;
+        }
+
+        .cell:active {
+            transform: scale(0.9);
+        }
+
+        .cell.correct {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(1.2);
+        }
+
+        .cell.wrong {
+            background-color: var(--error-color);
+            color: white;
+            animation: shake 0.2s;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-4px);
+            }
+
+            75% {
+                transform: translateX(4px);
+            }
+        }
+
+        .ranking {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.4);
+            padding: 12px;
+            border-radius: 16px;
+            margin-top: 15px;
+            box-sizing: border-box;
+        }
+
+        .ranking h3 {
+            margin: 0 0 8px 0;
+            font-size: 1rem;
+            color: #444;
+            text-align: center;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 4px;
+        }
+
+        .ranking-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 4px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            font-size: 0.85rem;
+        }
+
+        .r-name {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .r-time {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #444;
+        }
     </style>
 </head>
 
@@ -115,7 +284,7 @@
     <script type="module">
         import { db, auth } from './config.js';
         import { signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { collection, addDoc, getDocs, query, limit, where, serverTimestamp } 
+        import { collection, addDoc, getDocs, query, limit, where, serverTimestamp }
             from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         // --- ログイン処理 ---
@@ -171,8 +340,8 @@
 
             function startGame() {
                 if (audioCtx?.state === 'suspended') audioCtx.resume();
-                if (isBgmEnabled) { bgm.currentTime = 0; bgm.play().catch(() => {}); }
-                
+                if (isBgmEnabled) { bgm.currentTime = 0; bgm.play().catch(() => { }); }
+
                 clearInterval(timerInterval);
                 nextNum = 1;
                 document.getElementById('target').textContent = "1";
@@ -231,25 +400,35 @@
                 const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
 
                 try {
-                    const q = query(rankingCol, where("createdAt", ">=", firstDay), limit(50));
+                    // 条件：今月のデータを、タイムの昇順（早い順）で取得する
+                    // ※これを行うには上記「1」のインデックス作成が必須です
+                    const q = query(
+                        rankingCol,
+                        where("createdAt", ">=", firstDay),
+                        orderBy("time", "asc"), // タイムが早い順
+                        limit(20)               // 上位20名
+                    );
+
                     const querySnapshot = await getDocs(q);
-                    
+
                     let data = [];
                     querySnapshot.forEach(doc => data.push(doc.data()));
-                    data.sort((a, b) => a.time - b.time); // タイム順にソート
 
                     if (data.length === 0) {
                         list.innerHTML = '<p style="text-align:center; font-size:0.8rem;">No records this month.</p>';
                         return;
                     }
 
-                    list.innerHTML = data.slice(0, 20).map((r, i) => `
-                        <div class="ranking-item">
-                            <span>${i + 1}. <span class="r-name">${escapeHtml(r.name)}</span></span>
-                            <span class="r-time">${Number(r.time).toFixed(3)}s</span>
-                        </div>
-                    `).join('');
-                } catch (e) { console.error("ランキング表示エラー:", e); }
+                    list.innerHTML = data.map((r, i) => `
+            <div class="ranking-item">
+                <span>${i + 1}. <span class="r-name">${escapeHtml(r.name)}</span></span>
+                <span class="r-time">${Number(r.time).toFixed(3)}s</span>
+            </div>
+        `).join('');
+                } catch (e) {
+                    console.error("ランキング表示エラー:", e);
+                    // ここでエラーが出る場合、コンソールに表示されるリンクからインデックスを作成してください
+                }
             }
 
             function createBoard(isPreview) {
@@ -278,7 +457,7 @@
                     gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
                     osc.connect(gain); gain.connect(audioCtx.destination);
                     osc.start(); osc.stop(audioCtx.currentTime + duration);
-                } catch (e) {}
+                } catch (e) { }
             }
 
             function toggleBgm() {
@@ -309,4 +488,5 @@
         }
     </script>
 </body>
+
 </html>
