@@ -340,21 +340,32 @@
             async function updateRankingDisplay() {
                 const list = document.getElementById('rankingList');
                 const now = new Date();
+                // 今月1日の0時0分
                 const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+
                 try {
-                    // 画像のインデックス (createdAt ↑, time ↑) に合わせたクエリ
+                    // 1. まず「今月分」のデータを取得する
+                    // インデックス (createdAt ↑, time ↑) に100%一致させる
                     const q = query(
                         rankingCol,
                         where("createdAt", ">=", firstDay),
                         orderBy("createdAt", "asc"),
                         orderBy("time", "asc"),
-                        limit(50)
+                        limit(100) // 多めに取得して漏れを防ぐ
                     );
+
                     const snap = await getDocs(q);
                     let data = [];
-                    snap.forEach(doc => data.push(doc.data()));
+                    snap.forEach(doc => {
+                        const d = doc.data();
+                        // タイムが数値であることを確実にする
+                        data.push({
+                            ...d,
+                            time: parseFloat(d.time)
+                        });
+                    });
 
-                    // JavaScript側で最終的な「速い順」ソート
+                    // 2. JavaScript側で「タイムが早い順」に強制ソート
                     data.sort((a, b) => a.time - b.time);
 
                     if (data.length === 0) {
@@ -362,18 +373,19 @@
                         return;
                     }
 
+                    // 3. 上位20件を表示
                     list.innerHTML = data.slice(0, 20).map((r, i) => `
-                    <div class="ranking-item">
-                        <span>${i + 1}. ${escapeHtml(r.name)}</span>
-                        <span>${Number(r.time).toFixed(3)}s</span>
-                    </div>`).join('');
+            <div class="ranking-item">
+                <span>${i + 1}. <span class="r-name">${escapeHtml(r.name)}</span></span>
+                <span class="r-time">${r.time.toFixed(3)}s</span>
+            </div>`).join('');
+
                 } catch (e) {
                     console.error("Ranking Error:", e);
-                    // モバイルでエラーが見えるように一時的に表示
-                    list.innerHTML = `<p style="color:red; font-size:0.5rem;">Err: ${e.code}</p>`;
+                    // モバイルでエラーが見えるようにする
+                    list.innerHTML = `<p style="color:red; font-size:0.5rem;">Err: ${e.code || e.message}</p>`;
                 }
             }
-
             // --- 以下、ゲームロジック (変更なし) ---
             function startGame() {
                 clearInterval(timerInterval);
