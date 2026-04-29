@@ -6,7 +6,7 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth
 
 // --- 既存の設定 ---
 const firebaseConfig = {
-    apiKey: "AIzaSyDmErQEIQKssVy12KodGDjwfIDbWcwBOmo",
+    apiKey: "AIzaSyB37I8uc3HBalZ_swUEKwKice4ugQaPLDU",
     authDomain: "speedtouch25-ca738.firebaseapp.com",
     projectId: "speedtouch25-ca738",
     storageBucket: "speedtouch25-ca738.appspot.com",
