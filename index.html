@@ -293,12 +293,16 @@
 
             if (email && password) {
                 signInWithEmailAndPassword(auth, email, password)
+                    .then(() => {
+                        alert("ログイン成功！");
+                    })
                     .catch((error) => {
-                        alert("ログイン失敗。正しい情報を入力してください。");
-                        login();
+                        console.error("Firebase Auth Error:", error.code, error.message);
+                        // APIキーの制限エラー(403)などの場合、ここでalertを出すとループを止められます
+                        alert("ログインできませんでした: " + error.message);
+                        // 少し待ってから再入力させるか、ボタンを押させる形にするのが理想です
+                        setTimeout(login, 1000);
                     });
-            } else {
-                login();
             }
         }
 
