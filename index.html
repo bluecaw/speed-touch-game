@@ -422,10 +422,33 @@
 
             async function saveRecord(time) {
                 const name = document.getElementById('playerName').value.trim() || 'Guest';
+                const numericTime = parseFloat(time);
+
+                // --- 【追加】自己ベストの更新チェックと保存 ---
+                const currentBest = localStorage.getItem('speedTouchBest');
+                if (!currentBest || numericTime < parseFloat(currentBest)) {
+                    // 記録がない、または今のタイムの方が早い（数値が小さい）場合
+                    localStorage.setItem('speedTouchBest', numericTime.toFixed(3));
+                    loadPersonalBest(); // 画面の表示を更新
+                }
+                // --------------------------------------------
+
                 try {
-                    await addDoc(rankingCol, { name, time: parseFloat(time), createdAt: serverTimestamp() });
+                    // Firestoreへの保存
+                    await addDoc(rankingCol, {
+                        name,
+                        time: numericTime,
+                        createdAt: serverTimestamp()
+                    });
+
+                    // ランキング表示の更新
                     updateRankingDisplay();
-                } catch (e) { console.error("Save Error", e); }
+
+                    alert(`FINISH! ${numericTime.toFixed(3)}s`);
+                } catch (e) {
+                    console.error("Save Error", e);
+                    alert("データの保存に失敗しました。");
+                }
             }
 
             function createBoard(isPreview) {
