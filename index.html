@@ -13,8 +13,7 @@
             --panel-bg: rgba(255, 255, 255, 0.85);
         }
 
-        html,
-        body {
+        html, body {
             margin: 0;
             padding: 0;
             width: 100%;
@@ -30,17 +29,9 @@
         }
 
         @keyframes rainbowBG {
-            0% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
-
-            100% {
-                background-position: 0% 50%;
-            }
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         .container {
@@ -59,198 +50,38 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
-        .info-panel {
-            text-align: center;
-            margin-bottom: 10px;
-            width: 100%;
-        }
+        .info-panel { text-align: center; margin-bottom: 10px; width: 100%; }
+        .timer { font-size: 3rem; font-weight: bold; color: #444; font-variant-numeric: tabular-nums; line-height: 1; }
+        .next-number { font-size: 1.2rem; color: var(--primary-color); font-weight: bold; }
+        .personal-best { font-size: 0.9rem; color: #555; background: rgba(255, 255, 255, 0.5); padding: 4px 12px; border-radius: 20px; margin-bottom: 10px; font-weight: bold; }
 
-        .timer {
-            font-size: 3rem;
-            font-weight: bold;
-            color: #444;
-            font-variant-numeric: tabular-nums;
-            line-height: 1;
-        }
+        .setup-area { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+        .input-group { display: flex; gap: 8px; width: 100%; flex-wrap: wrap; }
+        input[type="text"] { flex: 1; min-width: 150px; padding: 12px; border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 12px; font-size: 1rem; text-align: center; background: rgba(255, 255, 255, 0.6); outline: none; }
+        .btn-bgm { flex: 1; min-width: 110px; padding: 12px; background-color: #666; font-size: 0.85rem; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
+        .btn-bgm.on { background-color: var(--success-color); }
+        .btn-start { width: 100%; padding: 14px; font-size: 1.1rem; border: none; border-radius: 12px; cursor: pointer; background-color: var(--primary-color); color: white; font-weight: bold; box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3); }
+        .btn-start:disabled { background-color: #999; cursor: not-allowed; box-shadow: none; }
 
-        .next-number {
-            font-size: 1.2rem;
-            color: var(--primary-color);
-            font-weight: bold;
-        }
-
-        .personal-best {
-            font-size: 0.9rem;
-            color: #555;
-            background: rgba(255, 255, 255, 0.5);
-            padding: 4px 12px;
-            border-radius: 20px;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-
-        .setup-area {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-
-        .input-group {
-            display: flex;
-            gap: 8px;
-            width: 100%;
-            flex-wrap: wrap;
-        }
-
-        input[type="text"] {
-            flex: 1;
-            min-width: 150px;
-            padding: 12px;
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            border-radius: 12px;
-            font-size: 1rem;
-            text-align: center;
-            background: rgba(255, 255, 255, 0.6);
-            outline: none;
-        }
-
-        .btn-bgm {
-            flex: 1;
-            min-width: 110px;
-            padding: 12px;
-            background-color: #666;
-            font-size: 0.85rem;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .btn-bgm.on {
-            background-color: var(--success-color);
-        }
-
-        .btn-start {
-            width: 100%;
-            padding: 14px;
-            font-size: 1.1rem;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            background-color: var(--primary-color);
-            color: white;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);
-        }
-
-        .btn-start:disabled {
-            background-color: #999;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-
-        .grid {
-            display: none;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 6px;
-            width: 100%;
-            aspect-ratio: 1 / 1;
-        }
-
-        .grid.playing {
-            display: grid;
-        }
-
-        .cell {
-            background-color: var(--panel-bg);
-            border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: clamp(1.2rem, 5vw, 1.8rem);
-            font-weight: bold;
-            color: #444;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: transform 0.1s, opacity 0.3s;
-        }
-
-        .cell:active {
-            transform: scale(0.9);
-        }
-
-        .cell.correct {
-            opacity: 0;
-            pointer-events: none;
-            transform: scale(1.2);
-        }
-
-        .cell.wrong {
-            background-color: var(--error-color);
-            color: white;
-            animation: shake 0.2s;
-        }
+        .grid { display: none; grid-template-columns: repeat(5, 1fr); gap: 6px; width: 100%; aspect-ratio: 1 / 1; }
+        .grid.playing { display: grid; }
+        .cell { background-color: var(--panel-bg); border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: clamp(1.2rem, 5vw, 1.8rem); font-weight: bold; color: #444; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); transition: transform 0.1s, opacity 0.3s; }
+        .cell:active { transform: scale(0.9); }
+        .cell.correct { opacity: 0; pointer-events: none; transform: scale(1.2); }
+        .cell.wrong { background-color: var(--error-color); color: white; animation: shake 0.2s; }
 
         @keyframes shake {
-
-            0%,
-            100% {
-                transform: translateX(0);
-            }
-
-            25% {
-                transform: translateX(-4px);
-            }
-
-            75% {
-                transform: translateX(4px);
-            }
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
         }
 
-        .ranking {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.4);
-            padding: 12px;
-            border-radius: 16px;
-            margin-top: 15px;
-            box-sizing: border-box;
-        }
-
-        .ranking h3 {
-            margin: 0 0 8px 0;
-            font-size: 1rem;
-            color: #444;
-            text-align: center;
-            border-bottom: 2px solid var(--primary-color);
-            padding-bottom: 4px;
-        }
-
-        .ranking-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .ranking-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 4px;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            font-size: 0.85rem;
-        }
-
-        .r-name {
-            font-weight: bold;
-            color: #333;
-        }
-
-        .r-time {
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-            color: #444;
-        }
+        .ranking { width: 100%; background: rgba(255, 255, 255, 0.4); padding: 12px; border-radius: 16px; margin-top: 15px; box-sizing: border-box; }
+        .ranking h3 { margin: 0 0 8px 0; font-size: 1rem; color: #444; text-align: center; border-bottom: 2px solid var(--primary-color); padding-bottom: 4px; }
+        .ranking-list { max-height: 400px; overflow-y: auto; }
+        .ranking-item { display: flex; justify-content: space-between; padding: 6px 4px; border-bottom: 1px solid rgba(0, 0, 0, 0.05); font-size: 0.85rem; }
+        .r-name { font-weight: bold; color: #333; }
+        .r-time { font-family: 'Courier New', monospace; font-weight: bold; color: #444; }
     </style>
 </head>
 
@@ -282,13 +113,9 @@
     <audio id="bgm" src="chopin.mp3" loop></audio>
 
     <script type="module">
-        // 1. config.js からのインポート
         import { db, auth } from './config.js';
-
-        // 2. 正確なバージョン (10.7.1) を指定
-        import { signInWithEmailAndPassword, onAuthStateChanged }
-            from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { collection, addDoc, getDocs, query, orderBy, limit, where, serverTimestamp }
+        import { signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { collection, addDoc, getDocs, query, limit, where, serverTimestamp } 
             from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         // --- ログイン処理 ---
@@ -298,7 +125,8 @@
             if (email && password) {
                 signInWithEmailAndPassword(auth, email, password)
                     .catch((e) => {
-                        alert("ログイン失敗: " + e.message);
+                        console.error("Auth Error:", e.code);
+                        alert("ログインに失敗しました。");
                         login();
                     });
             }
@@ -313,83 +141,38 @@
                 startBtn.textContent = "GAME START";
                 if (db) {
                     setupSystem(db);
+                } else {
+                    console.error("Firestore (db) が読み込めていません。");
                 }
             } else {
                 startBtn.disabled = true;
-                startBtn.textContent = "認証待機中...";
                 login();
             }
         });
 
+        // --- システムメインロジック ---
         function setupSystem(database) {
             const rankingCol = collection(database, "rankings");
             let nextNum = 1;
             let startTime, timerInterval, isRunning = false;
+            let audioCtx = null;
+            let isBgmEnabled = false;
             const bgm = document.getElementById('bgm');
             const bgmBtn = document.getElementById('bgmToggleBtn');
 
-            // 初回実行
+            // 初期表示
             loadPersonalBest();
             updateRankingDisplay();
             createBoard(true);
 
+            // イベント登録
             document.getElementById('startBtn').onclick = startGame;
             bgmBtn.onclick = toggleBgm;
 
-            // --- ランキング表示 (モバイル・インデックス対応版) ---
-            // --- ランキング表示 (モバイル・インデックス対応決定版) ---
-            async function updateRankingDisplay() {
-                const list = document.getElementById('rankingList');
-                const now = new Date();
-                const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-
-                try {
-                    // 1. 今月のデータを取得（インデックス：createdAt ↑, time ↑ に対応）
-                    // ※ orderBy("time") を先に書くとインデックスエラーになるため、
-                    //    まずは createdAt で絞り込みと並べ替えを行います。
-                    const q = query(
-                        rankingCol,
-                        where("createdAt", ">=", firstDay),
-                        orderBy("createdAt", "asc"),
-                        limit(100) // 漏れを防ぐため多めに取得
-                    );
-
-                    const snap = await getDocs(q);
-                    let data = [];
-
-                    snap.forEach(doc => {
-                        const d = doc.data();
-                        // 数値として扱えるよう parseFloat を徹底
-                        data.push({
-                            ...d,
-                            time: parseFloat(d.time) || 999.999 // 万が一データが不正な場合のフォールバック
-                        });
-                    });
-
-                    // 2. 【重要】取得したデータを JavaScript 側で「タイムの早い順」に強制ソート
-                    // これにより、Firestore側のインデックス制約に縛られずに正確なランキングが出せます。
-                    data.sort((a, b) => a.time - b.time);
-
-                    if (data.length === 0) {
-                        list.innerHTML = '<p style="text-align:center; font-size:0.8rem;">No records this month.</p>';
-                        return;
-                    }
-
-                    // 3. 上位20件を表示（.slice(0, 20)）
-                    list.innerHTML = data.slice(0, 20).map((r, i) => `
-            <div class="ranking-item">
-                <span>${i + 1}. <span class="r-name">${escapeHtml(r.name)}</span></span>
-                <span class="r-time">${r.time.toFixed(3)}s</span>
-            </div>`).join('');
-
-                } catch (e) {
-                    console.error("Ranking Error:", e);
-                    // モバイルでエラーコード（PERMISSION_DENIED や FAILED_PRECONDITION 等）を確認できるようにします
-                    list.innerHTML = `<p style="color:red; font-size:0.5rem;">Err: ${e.code || e.message}</p>`;
-                }
-            }
-            // --- 以下、ゲームロジック (変更なし) ---
             function startGame() {
+                if (audioCtx?.state === 'suspended') audioCtx.resume();
+                if (isBgmEnabled) { bgm.currentTime = 0; bgm.play().catch(() => {}); }
+                
                 clearInterval(timerInterval);
                 nextNum = 1;
                 document.getElementById('target').textContent = "1";
@@ -405,50 +188,68 @@
             function handleTouch(num, element) {
                 if (!isRunning || element.classList.contains('correct')) return;
                 if (num === nextNum) {
+                    playSound(880, 'sine', 0.1);
                     element.classList.add('correct');
                     if (++nextNum > 25) {
-                        clearInterval(timerInterval);
-                        isRunning = false;
-                        const time = ((Date.now() - startTime) / 1000).toFixed(3);
-                        saveRecord(time);
+                        finishGame();
                     } else {
                         document.getElementById('target').textContent = nextNum;
                     }
                 } else {
+                    playSound(150, 'sawtooth', 0.2, 0.05);
                     element.classList.add('wrong');
                     setTimeout(() => element.classList.remove('wrong'), 200);
                 }
             }
 
+            function finishGame() {
+                clearInterval(timerInterval);
+                isRunning = false;
+                bgm.pause();
+                const time = ((Date.now() - startTime) / 1000).toFixed(3);
+                savePersonalBest(time);
+                saveRecord(time);
+                playSound(1046, 'sine', 0.5);
+            }
+
             async function saveRecord(time) {
                 const name = document.getElementById('playerName').value.trim() || 'Guest';
-                const numericTime = parseFloat(time);
-
-                // --- 【追加】自己ベストの更新チェックと保存 ---
-                const currentBest = localStorage.getItem('speedTouchBest');
-                if (!currentBest || numericTime < parseFloat(currentBest)) {
-                    // 記録がない、または今のタイムの方が早い（数値が小さい）場合
-                    localStorage.setItem('speedTouchBest', numericTime.toFixed(3));
-                    loadPersonalBest(); // 画面の表示を更新
-                }
-                // --------------------------------------------
-
                 try {
-                    // Firestoreへの保存
                     await addDoc(rankingCol, {
-                        name,
-                        time: numericTime,
+                        name: name,
+                        time: parseFloat(time),
                         createdAt: serverTimestamp()
                     });
-
-                    // ランキング表示の更新
                     updateRankingDisplay();
+                    alert(`FINISH!\nTime: ${time}s`);
+                } catch (e) { console.error("データ保存エラー:", e); }
+            }
 
-                    alert(`FINISH! ${numericTime.toFixed(3)}s`);
-                } catch (e) {
-                    console.error("Save Error", e);
-                    alert("データの保存に失敗しました。");
-                }
+            async function updateRankingDisplay() {
+                const list = document.getElementById('rankingList');
+                const now = new Date();
+                const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+
+                try {
+                    const q = query(rankingCol, where("createdAt", ">=", firstDay), limit(50));
+                    const querySnapshot = await getDocs(q);
+                    
+                    let data = [];
+                    querySnapshot.forEach(doc => data.push(doc.data()));
+                    data.sort((a, b) => a.time - b.time); // タイム順にソート
+
+                    if (data.length === 0) {
+                        list.innerHTML = '<p style="text-align:center; font-size:0.8rem;">No records this month.</p>';
+                        return;
+                    }
+
+                    list.innerHTML = data.slice(0, 20).map((r, i) => `
+                        <div class="ranking-item">
+                            <span>${i + 1}. <span class="r-name">${escapeHtml(r.name)}</span></span>
+                            <span class="r-time">${Number(r.time).toFixed(3)}s</span>
+                        </div>
+                    `).join('');
+                } catch (e) { console.error("ランキング表示エラー:", e); }
             }
 
             function createBoard(isPreview) {
@@ -457,25 +258,55 @@
                 grid.classList.toggle('playing', !isPreview);
                 const nums = Array.from({ length: 25 }, (_, i) => i + 1);
                 if (!isPreview) nums.sort(() => Math.random() - 0.5);
-                nums.forEach(n => {
-                    const c = document.createElement('div');
-                    c.className = 'cell';
-                    c.innerHTML = `<span>${n}</span>`;
-                    c.onclick = () => handleTouch(n, c);
-                    grid.appendChild(c);
+                nums.forEach(num => {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.innerHTML = `<span>${num}</span>`;
+                    cell.onclick = () => handleTouch(num, cell);
+                    grid.appendChild(cell);
                 });
+            }
+
+            function playSound(freq, type, duration, vol = 0.1) {
+                try {
+                    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.start(); osc.stop(audioCtx.currentTime + duration);
+                } catch (e) {}
+            }
+
+            function toggleBgm() {
+                isBgmEnabled = !isBgmEnabled;
+                bgmBtn.textContent = isBgmEnabled ? "🔊 BGM: ON" : "🔇 BGM: OFF";
+                bgmBtn.classList.toggle('on', isBgmEnabled);
+                if (!isBgmEnabled) bgm.pause();
+                else if (isRunning) bgm.play();
             }
 
             function loadPersonalBest() {
                 const best = localStorage.getItem('speedTouchBest');
-                document.getElementById('personalBest').textContent = best ? `Best: ${best}s` : `Best: --.---`;
+                document.getElementById('personalBest').textContent = best ? `Personal Best: ${best}s` : `Personal Best: --.---`;
             }
-            function toggleBgm() { /* BGMロジック */ }
+
+            function savePersonalBest(newTime) {
+                const currentBest = localStorage.getItem('speedTouchBest');
+                if (!currentBest || parseFloat(newTime) < parseFloat(currentBest)) {
+                    localStorage.setItem('speedTouchBest', newTime);
+                    loadPersonalBest();
+                }
+            }
+
             function escapeHtml(str) {
-                return str ? str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])) : "";
+                if (!str) return "";
+                return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
             }
         }
     </script>
 </body>
-
 </html>
